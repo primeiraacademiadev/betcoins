@@ -33,7 +33,7 @@ Para produção, testar deadlocks intercarteiras, reentradas, roundings e falhas
 
 ## Plano de testes
 1. Unitários das fórmulas de YTD, odds e colateral.
-2. SQL de integração num projeto descartável: matrícula, voto, carteira, offers, match, cancelamento, revenda e settlement.
+2. Smoke SQL com PostgreSQL 16 no CI e stub mínimo de Auth: matrícula, voto, sprints, carteira, offers, match, revenda e settlement; replicar posteriormente em Supabase descartável.
 3. Casos adversariais usando dois utilizadores autenticados e sessões paralelas.
 4. Testes manuais de UI em browser e mobile.
 
