@@ -283,7 +283,7 @@ language sql stable security definer set search_path='' as $$
  select p.nickname,w.available,w.reserved,w.total_issued from public.wallets w join public.profiles p on p.id=w.owner_id
  where not exists(select 1 from public.competitors c where c.id=w.owner_id)
  order by w.available+w.reserved desc,p.nickname
-$;
+$$;
 -- Public order-book detail through a narrow, authenticated, read-only RPC.
 -- Positions are private on direct SELECT, but open listing metadata is market data.
 create or replace function public.get_active_listings()
@@ -298,7 +298,7 @@ language sql stable security definer set search_path='' as $$
  join public.markets m on m.id=p.market_id
  where l.state='open' and p.status='open' and m.state='open' and m.closes_at>now()
  order by l.created_at desc
-$;
+$$;
 -- Grant only after checking membership. The client never supplies user or period.
 create or replace function public.grant_weekly(p_week date default null) returns integer
 language plpgsql security definer set search_path='' as $$
@@ -428,7 +428,7 @@ begin
   raise exception 'Anúncio indisponível';
  end if;
  update public.listings set state='cancelled' where id=p_listing;
-end $;
+end $$;
 create or replace function public.settle_market(p_market uuid,p_winner uuid)
 returns void language plpgsql security definer set search_path='' as $$
 declare v_market public.markets%rowtype;v_trade public.trades%rowtype;v_back uuid;v_lay uuid;v_offer public.offers%rowtype;v_release numeric;
