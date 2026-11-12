@@ -30,11 +30,11 @@ update public.sprints set ends_at=now()-interval '1 sec';
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 select public.capture_sprint((select id from public.sprints limit 1),'end');
-do $declare v_result numeric;begin
+do $$declare v_result numeric;begin
  select return_pct into v_result from public.get_sprint_rankings((select id from public.sprints limit 1))
  where competitor_id='11111111-1111-4111-8111-111111111111';
  if abs(v_result-10.2222)>0.001 then raise exception 'Retorno sprint incorrecto: %',v_result;end if;
-end $;
+end $$;
 -- A spectator can only receive weekly grants once.
 select public.grant_weekly();
 select public.grant_weekly();
