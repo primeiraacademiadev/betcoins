@@ -379,9 +379,10 @@ begin
  if v_position.status<>'open' or v_position.owner_id<>v_listing.seller_id then raise exception 'Posição indisponível';end if;
  if not exists(select 1 from public.markets where id=v_position.market_id and state='open' and closes_at>now()) then raise exception 'Mercado fechado';end if;
  v_collateral:=case when v_position.side='back' then v_position.stake else v_position.liability end;
- -- Transfer the stake/liability intact: the buyer pays a price AND takes over the reserved collateral.
- perform public.transfer_coins(auth.uid(),-v_listing.price-v_collateral,v_collateral,'buy_position',p_listing::text);
- perform public.transfer_coins(v_listing.seller_id,v_listing.price+v_collateral,-v_collateral,'sell_position',p_listing::text);
+ -- Seller transfers the already-reserved collateral to buyer; buyer pays only the listing price.
+ -- No collateral is minted or destroyed; the aggregate wallet balance stays unchanged.
+ perform public.transfer_coins(auth.uid(),-v_listing.price,v_collateral,'buy_position',p_listing::text);
+ perform public.transfer_coins(v_listing.seller_id,v_listing.price,-v_collateral,'sell_position',p_listing::text);
  update public.positions set owner_id=auth.uid() where id=v_position.id;
  update public.listings set state='sold',sold_to=auth.uid(),sold_at=now() where id=p_listing;
 end $$;
