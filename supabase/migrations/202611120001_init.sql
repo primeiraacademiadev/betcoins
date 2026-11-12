@@ -381,10 +381,20 @@ begin
  v_collateral:=case when v_position.side='back' then v_position.stake else v_position.liability end;
  -- Transfer the stake/liability intact: the buyer pays a price AND takes over the reserved collateral.
  perform public.transfer_coins(auth.uid(),-v_listing.price-v_collateral,v_collateral,'buy_position',p_listing::text);
- perform public.transfer_coins(v_listing.seller_id,v_listing.price,-v_collateral,'sell_position',p_listing::text);
+ perform public.transfer_coins(v_listing.seller_id,v_listing.price+v_collateral,-v_collateral,'sell_position',p_listing::text);
  update public.positions set owner_id=auth.uid() where id=v_position.id;
  update public.listings set state='sold',sold_to=auth.uid(),sold_at=now() where id=p_listing;
 end $$;
+create or replace function public.cancel_listing(p_listing uuid)
+returns void language plpgsql security definer set search_path='' as $
+declare v_listing public.listings%rowtype;
+begin
+ select * into v_listing from public.listings where id=p_listing for update;
+ if not found or v_listing.seller_id<>auth.uid() or v_listing.state<>'open' then
+  raise exception 'Anúncio indisponível';
+ end if;
+ update public.listings set state='cancelled' where id=p_listing;
+end $;
 create or replace function public.settle_market(p_market uuid,p_winner uuid)
 returns void language plpgsql security definer set search_path='' as $$
 declare v_market public.markets%rowtype;v_trade public.trades%rowtype;v_back uuid;v_lay uuid;v_offer public.offers%rowtype;v_release numeric;
@@ -422,6 +432,9 @@ create view public.active_listings with(security_invoker=true) as
  select * from public.listings where state='open';
 grant select on public.my_positions,public.active_listings to authenticated;
 
+-- API is read-only for anyone not authenticated; grant execute only to authenticated.
+-- Financial invariants: total available+reserved changes only for initial/weekly grant.
+-- Each trade carries exactly two sides. Reselling moves its full colateral intact.
 -- Block automatic execution of helper functions by users.
 revoke all on function public.transfer_coins(uuid,numeric,numeric,text,text) from public,anon,authenticated;
 revoke all on function public.register_player() from public,anon,authenticated;
@@ -438,7 +451,7 @@ grant execute on function public.my_roles(),public.get_competitors(),public.get_
 grant execute on function public.update_nickname(text),public.apply_competitor(),
  public.vote_application(uuid,boolean),public.set_my_score(numeric),
  public.place_offer(uuid,text,numeric,integer),public.accept_offer(uuid,integer),
- public.cancel_offer(uuid),public.list_position(uuid,numeric),public.buy_position(uuid) to authenticated;
+ public.cancel_offer(uuid),public.list_position(uuid,numeric),public.cancel_listing(uuid),public.buy_position(uuid) to authenticated;
 grant execute on function public.create_market(text,text,text,timestamptz,uuid[]),
  public.settle_market(uuid,uuid),public.grant_weekly(date) to authenticated;
 
