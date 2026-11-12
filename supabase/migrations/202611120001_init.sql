@@ -289,7 +289,7 @@ $;
 create or replace function public.get_active_listings()
 returns table(id uuid,position_id uuid,seller_id uuid,price numeric,state text,created_at timestamptz,
  side text,market_id uuid,outcome_id uuid,stake integer,liability numeric,outcome_label text,market_title text)
-language sql stable security definer set search_path='' as $
+language sql stable security definer set search_path='' as $$
  select l.id,l.position_id,l.seller_id,l.price,l.state,l.created_at,
  p.side,p.market_id,p.outcome_id,p.stake,p.liability,o.label,m.title
  from public.listings l
@@ -420,7 +420,7 @@ begin
  update public.listings set state='sold',sold_to=auth.uid(),sold_at=now() where id=p_listing;
 end $$;
 create or replace function public.cancel_listing(p_listing uuid)
-returns void language plpgsql security definer set search_path='' as $
+returns void language plpgsql security definer set search_path='' as $$
 declare v_listing public.listings%rowtype;
 begin
  select * into v_listing from public.listings where id=p_listing for update;
