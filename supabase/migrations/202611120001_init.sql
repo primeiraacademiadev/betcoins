@@ -281,8 +281,24 @@ create or replace function public.get_rankings()
 returns table(nickname text,available numeric,reserved numeric,issued numeric)
 language sql stable security definer set search_path='' as $$
  select p.nickname,w.available,w.reserved,w.total_issued from public.wallets w join public.profiles p on p.id=w.owner_id
+ where not exists(select 1 from public.competitors c where c.id=w.owner_id)
  order by w.available+w.reserved desc,p.nickname
-$$;
+$;
+-- Public order-book detail through a narrow, authenticated, read-only RPC.
+-- Positions are private on direct SELECT, but open listing metadata is market data.
+create or replace function public.get_active_listings()
+returns table(id uuid,position_id uuid,seller_id uuid,price numeric,state text,created_at timestamptz,
+ side text,market_id uuid,outcome_id uuid,stake integer,liability numeric,outcome_label text,market_title text)
+language sql stable security definer set search_path='' as $
+ select l.id,l.position_id,l.seller_id,l.price,l.state,l.created_at,
+ p.side,p.market_id,p.outcome_id,p.stake,p.liability,o.label,m.title
+ from public.listings l
+ join public.positions p on p.id=l.position_id
+ join public.outcomes o on o.id=p.outcome_id
+ join public.markets m on m.id=p.market_id
+ where l.state='open' and p.status='open' and m.state='open' and m.closes_at>now()
+ order by l.created_at desc
+$;
 -- Grant only after checking membership. The client never supplies user or period.
 create or replace function public.grant_weekly(p_week date default null) returns integer
 language plpgsql security definer set search_path='' as $$
@@ -465,7 +481,7 @@ begin
  end loop;
 end $$;
 grant execute on function public.my_roles(),public.get_competitors(),public.get_applications(),
- public.get_wallet(),public.get_rankings(),public.is_admin(),public.is_competitor() to authenticated;
+ public.get_wallet(),public.get_rankings(),public.get_active_listings(),public.is_admin(),public.is_competitor() to authenticated;
 grant execute on function public.update_nickname(text),public.apply_competitor(),
  public.vote_application(uuid,boolean),public.set_my_score(numeric),
  public.place_offer(uuid,text,numeric,integer),public.accept_offer(uuid,integer),
