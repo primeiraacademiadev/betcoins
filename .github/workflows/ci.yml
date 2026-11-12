@@ -5,6 +5,26 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: betcoins
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: betcoins
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,3 +33,9 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run build
+      - name: Database migration and trading smoke test
+        run: |
+          psql -v ON_ERROR_STOP=1 -f tests/db/bootstrap.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120001_init.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120002_sprints.sql
+          psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
