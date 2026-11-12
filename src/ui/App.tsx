@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowRight, ChartNoAxesCombined, Check, CircleDollarSign, Coins, ExternalLink, LogIn, LogOut, Menu, Plus, RefreshCw, Shield, Trophy, Wallet as WalletIcon } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { client, configured, rpc, selectRows } from '../lib/supabase';
