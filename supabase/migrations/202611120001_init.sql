@@ -29,6 +29,11 @@ create table public.competitors(
  ytd numeric(12,4) not null default 0 check(ytd >= -100),
  updated_at timestamptz
 );
+create table public.application_electorate(
+ application_id uuid not null references public.applications(id),
+ voter_id uuid not null references public.competitors(id),
+ primary key(application_id,voter_id)
+);
 create table public.votes(
  application_id uuid not null references public.applications(id),
  voter_id uuid not null references public.competitors(id),
@@ -146,6 +151,7 @@ alter table public.admins enable row level security;
 alter table public.championships enable row level security;
 alter table public.applications enable row level security;
 alter table public.competitors enable row level security;
+alter table public.application_electorate enable row level security;
 alter table public.votes enable row level security;
 alter table public.score_history enable row level security;
 alter table public.wallets enable row level security;
@@ -223,7 +229,9 @@ begin
    -- Bootstrap first competitor only by an explicit administrator, never first signup.
    raise exception 'A primeira admissão requer um administrador';
  end if;
- insert into public.applications(candidate_id,eligible_votes) values(auth.uid(),v_count);
+ with created as (insert into public.applications(candidate_id,eligible_votes) values(auth.uid(),v_count) returning id)
+ insert into public.application_electorate(application_id,voter_id)
+ select created.id,c.id from created cross join public.competitors c;
 end $$;
 create or replace function public.vote_application(p_application uuid,p_approve boolean)
 returns void language plpgsql security definer set search_path='' as $$
@@ -234,6 +242,7 @@ begin
  select * into v_app from public.applications where id=p_application for update;
  if not found or v_app.state<>'pending' then raise exception 'Candidatura indisponível'; end if;
  if v_app.candidate_id=auth.uid() then raise exception 'Não podes votar na própria candidatura'; end if;
+ if not exists(select 1 from public.application_electorate where application_id=p_application and voter_id=auth.uid()) then raise exception 'Não pertences ao eleitorado desta votação';end if;
  insert into public.votes(application_id,voter_id,approve) values(p_application,auth.uid(),p_approve);
  select count(*) filter(where approve),count(*) filter(where not approve) into v_yes,v_no from public.votes where application_id=p_application;
  if v_yes > v_app.eligible_votes/2 then
@@ -318,7 +327,7 @@ declare v_market public.markets%rowtype;v_offer uuid;v_reserve numeric;
 begin
  if auth.uid() is null then raise exception 'Não autenticado';end if;
  if p_side not in ('back','lay') or p_odds<=1 or p_odds>1000 or p_odds<>round(p_odds,2) or p_stake<1 or p_stake>1000000 then raise exception 'Oferta inválida';end if;
- select m.* into v_market from public.markets m join public.outcomes o on o.market_id=m.id where o.id=p_outcome;
+ select m.* into v_market from public.markets m join public.outcomes o on o.market_id=m.id where o.id=p_outcome for update of m;
  if not found or v_market.state<>'open' or now()>=v_market.closes_at then raise exception 'Mercado fechado';end if;
  v_reserve:=case when p_side='back' then p_stake else round(p_stake*(p_odds-1),2) end;
  perform public.transfer_coins(auth.uid(),-v_reserve,v_reserve,'reserve_offer',gen_random_uuid()::text);
@@ -328,9 +337,13 @@ begin
 end $$;
 create or replace function public.accept_offer(p_offer uuid,p_stake integer)
 returns uuid language plpgsql security definer set search_path='' as $$
-declare v_offer public.offers%rowtype;v_trade uuid;v_liability numeric;v_taker_reserve numeric;
+declare v_offer public.offers%rowtype;v_trade uuid;v_liability numeric;v_taker_reserve numeric;v_market_id uuid;
 begin
  if auth.uid() is null or p_stake<1 then raise exception 'Pedido inválido';end if;
+ select market_id into v_market_id from public.offers where id=p_offer;
+ if v_market_id is null then raise exception 'Oferta indisponível';end if;
+ perform 1 from public.markets where id=v_market_id and state='open' and closes_at>now() for update;
+ if not found then raise exception 'Mercado fechado';end if;
  select * into v_offer from public.offers where id=p_offer for update;
  if not found or v_offer.state<>'open' or v_offer.stake_remaining<p_stake then raise exception 'Oferta indisponível';end if;
  if v_offer.owner_id=auth.uid() then raise exception 'Não podes aceitar a própria oferta';end if;
@@ -362,6 +375,8 @@ returns uuid language plpgsql security definer set search_path='' as $$
 declare v_position public.positions%rowtype;v_listing uuid;
 begin
  if p_price is null or p_price<=0 or p_price>100000000 then raise exception 'Preço inválido';end if;
+ perform 1 from public.markets where id=(select market_id from public.positions where id=p_position) and state='open' and closes_at>now() for update;
+ if not found then raise exception 'Mercado fechado';end if;
  select * into v_position from public.positions where id=p_position for update;
  if not found or v_position.owner_id<>auth.uid() or v_position.status<>'open' then raise exception 'Posição indisponível';end if;
  if not exists(select 1 from public.markets where id=v_position.market_id and state='open' and closes_at>now()) then raise exception 'Mercado encerrado';end if;
@@ -373,6 +388,8 @@ returns void language plpgsql security definer set search_path='' as $$
 declare v_listing public.listings%rowtype;v_position public.positions%rowtype;v_collateral numeric;
 begin
  if auth.uid() is null then raise exception 'Não autenticado';end if;
+ perform 1 from public.markets where id=(select p.market_id from public.positions p join public.listings l on l.position_id=p.id where l.id=p_listing) and state='open' and closes_at>now() for update;
+ if not found then raise exception 'Mercado fechado';end if;
  select * into v_listing from public.listings where id=p_listing for update;
  if not found or v_listing.state<>'open' or v_listing.seller_id=auth.uid() then raise exception 'Oferta indisponível';end if;
  select * into v_position from public.positions where id=v_listing.position_id for update;
