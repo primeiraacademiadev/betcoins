@@ -38,11 +38,13 @@ end $$;
 -- A spectator can only receive weekly grants once.
 select public.grant_weekly();
 select public.grant_weekly();
+reset role;
 do $$begin
  if (select total_issued from public.wallets where owner_id='33333333-3333-4333-8333-333333333333')<>2000 then
   raise exception 'Grant semanal duplicado';
  end if;
 end $$;
+set role authenticated;
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 select public.place_offer(
  (select id from public.outcomes where competitor_id='11111111-1111-4111-8111-111111111111' limit 1),
@@ -60,6 +62,7 @@ select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222'
 select public.list_position((select id from public.positions where side='back' limit 1),5);
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 select public.buy_position((select id from public.listings limit 1));
+reset role;
 do $$declare v_supply numeric;v_issued numeric;begin
  select sum(available+reserved),sum(total_issued) into v_supply,v_issued from public.wallets;
  if v_supply<>v_issued then raise exception 'A revenda criou ou destruiu BetCoins: % vs %',v_supply,v_issued;end if;
@@ -73,6 +76,7 @@ select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111'
 select public.settle_market(
  (select id from public.markets limit 1),
  (select id from public.outcomes where competitor_id='11111111-1111-4111-8111-111111111111' limit 1));
+reset role;
 do $$declare v_supply numeric;v_issued numeric;begin
  select sum(available+reserved),sum(total_issued) into v_supply,v_issued from public.wallets;
  if v_supply<>v_issued then raise exception 'Liquidação criou ou destruiu BetCoins';end if;
@@ -80,6 +84,8 @@ do $$declare v_supply numeric;v_issued numeric;begin
  if (select state from public.markets limit 1)<>'settled' then raise exception 'Mercado não liquidado';end if;
 end $$;
 -- Permission check: authenticated role must not write wallets directly.
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 do $$begin
  begin
   update public.wallets set available=999999;
