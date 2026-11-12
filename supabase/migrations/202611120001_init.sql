@@ -329,6 +329,7 @@ begin
  if not public.is_admin() then raise exception 'Sem permissão';end if;
  if length(btrim(p_title)) not between 3 and 120 or p_kind not in ('annual','weekly','monthly') or p_category not in ('winner','second','last') then raise exception 'Mercado inválido';end if;
  if p_closes_at<=now() or coalesce(array_length(p_competitors,1),0)<2 then raise exception 'Prazo/concorrentes inválidos';end if;
+ if not exists(select 1 from public.championships where state='open' and starts_at<=now() and ends_at>now() and p_closes_at<=ends_at) then raise exception 'Mercado fora do campeonato';end if;
  if (select count(distinct id) from public.competitors where id=any(p_competitors))<>array_length(p_competitors,1) then raise exception 'Concorrentes inválidos ou repetidos';end if;
  insert into public.markets(title,kind,category,closes_at) values(btrim(p_title),p_kind,p_category,p_closes_at) returning id into v_market;
  foreach v_id in array p_competitors loop
