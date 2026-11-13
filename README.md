@@ -23,8 +23,8 @@
 
 ### Dois rankings de espectadores
 
-1. **Maior património em BetCoins:** saldo disponível + valor estimado das posições ao preço de mercado, distinguindo explicitamente o que é estimativa sem liquidez.
-2. **Maior valorização relativa:** performance descontando os créditos recebidos da plataforma; a fórmula exata e o tratamento de posições sem preço ficam documentados antes do lançamento.
+1. **Maior património contabilístico em BetCoins (V1):** saldo disponível + colateral reservado. A marcação a mercado das posições exige liquidez e fica para uma evolução.
+2. **Maior valorização relativa (V1):** (saldo disponível + reservado − créditos recebidos) / créditos recebidos. É uma rentabilidade contabilística simples, não uma valorização de mercado nem um retorno ponderado pelo tempo.
 
 As duas classificações dos espectadores são independentes do ranking de valorização das carteiras.
 
@@ -38,6 +38,6 @@ Aplicação web pública em **GitHub Pages** (React, TypeScript, Vite), autentic
 
 ## Estado e participação
 
-**Estado: planeamento — ainda não é um jogo disponível.** O [backlog](BACKLOG.md) mostra as entregas propostas, as decisões em aberto e os critérios de aceitação. Comentários e sugestões são bem-vindos através das [issues](https://github.com/primeiraacademiadev/betcoins/issues).
+**Estado: MVP implementado em branch de desenvolvimento, ainda não publicado nem ligado ao Supabase.** Veja a [PR #10](https://github.com/primeiraacademiadev/betcoins/pull/10). O [backlog](BACKLOG.md) mostra as entregas propostas, as decisões em aberto e os critérios de aceitação. Comentários e sugestões são bem-vindos através das [issues](https://github.com/primeiraacademiadev/betcoins/issues).
 
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.

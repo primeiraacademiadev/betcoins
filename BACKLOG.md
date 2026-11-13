@@ -47,14 +47,14 @@ Ter um jogo utilizável para o Campeonato 2026 (31-12-2026), com um ranking de i
 
 ### E5 — Mercado secundário / saída 3-B (P0)
 - Representar posições como direitos/obrigações transferíveis com colateral associado.
-- Criar proposta de revenda (total/parcial), preço em BetCoins, validade e cancelamento.
+- V1: revenda integral de posição por preço em BetCoins, validade por mercado e cancelamento. Futuro: revenda parcial.
 - Compra atómica transfere titularidade, risco e colateral; preserva contraparte original, ledger e histórico.
 - Não há saída garantida nem preço de plataforma; distinguir posição posta à venda de posição vendida.
 - Não permitir revenda após fecho, posições já comprometidas ou venda dupla; testar concorrência.
 
 ### E6 — Rankings dos espectadores (P0)
-- Património: saldo livre + valor marcado das posições, com estado de avaliação (cotado/sem liquidez).
-- Valorização relativa: excluir créditos da plataforma e definir método de cálculo ponderado pelos fluxos.
+- V1: património contabilístico = saldo livre + colateral reservado. Futuro: valorização marcada a mercado, com estado de avaliação (cotado/sem liquidez).
+- V1: valorização relativa contabilística = (património contabilístico − créditos recebidos) / créditos recebidos. Futuro: cálculo ponderado no tempo/fluxos e avaliação com preços de mercado.
 - Classificação histórica e indicadores: créditos recebidos, P&L realizado, posições abertas, exposição e património.
 - Não tratar apostas pendentes como lucro realizado.
 
