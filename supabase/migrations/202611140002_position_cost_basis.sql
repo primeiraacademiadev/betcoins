@@ -15,6 +15,21 @@ set cost_basis = coalesce(
 alter table public.positions alter column cost_basis set not null;
 alter table public.positions add constraint positions_cost_basis_nonnegative check(cost_basis>=0);
 
+-- Legacy matching RPCs insert positions without explicitly supplying cost_basis.
+-- Capture the original exposure automatically for new matched BACK/LAY positions.
+create or replace function public.initialize_position_cost_basis()
+returns trigger language plpgsql set search_path='' as $
+begin
+ if new.cost_basis is null then
+  new.cost_basis := case when new.side='back' then new.stake else new.liability end;
+ end if;
+ return new;
+end $;
+create trigger positions_initial_cost_basis
+before insert on public.positions
+for each row execute function public.initialize_position_cost_basis();
+
+
 -- Completed sales are immutable records of price, owner and the seller's economic result.
 create table public.position_sales (
  listing_id uuid primary key references public.listings(id),
