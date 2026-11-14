@@ -38,4 +38,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/db/bootstrap.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120001_init.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120002_sprints.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611140002_position_cost_basis.sql
           psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
