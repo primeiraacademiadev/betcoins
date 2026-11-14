@@ -12,3 +12,7 @@
 .account-avatar{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#614d31;color:#f4cd86;font-size:14px;font-weight:700}
 .text-link{border:0;background:transparent;color:#eac078;text-decoration:underline;cursor:pointer;padding:0 4px}
 @media(max-width:760px){.toast-region{top:12px;right:12px;width:calc(100vw - 24px)}}
+
+.trade-preview{background:#1b2d36;border:1px solid #355b58;color:#c1dacf;padding:12px 14px;border-radius:8px;line-height:1.6;font-size:12px}
+.trade-preview strong{color:#f0ce87}
+.field-error{color:#f5aa92;font-size:12px;line-height:1.5}
