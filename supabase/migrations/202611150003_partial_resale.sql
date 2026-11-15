@@ -47,6 +47,7 @@ begin
  end if;
  v_slice_liability := v_position.liability*p_stake/v_position.stake;
  if round(v_slice_liability,2)<>v_slice_liability
+  or trunc(v_slice_liability)<>v_slice_liability
   or round(v_position.cost_basis*p_stake/v_position.stake,2)<>(v_position.cost_basis*p_stake/v_position.stake)
   or round(v_opposite.cost_basis*p_stake/v_position.stake,2)<>(v_opposite.cost_basis*p_stake/v_position.stake) then
   raise exception 'Lote não divisível: stake, responsabilidade e custo precisam de cêntimos exatos';
@@ -97,8 +98,9 @@ begin
   raise exception 'Lote já não disponível';
  end if;
  v_piece_liability:=v_position.liability*v_piece_stake/v_position.stake;
- if round(v_piece_liability,2)<>v_piece_liability then
-  raise exception 'Responsabilidade não divisível';
+ if round(v_piece_liability,2)<>v_piece_liability or
+    (v_piece_stake<v_position.stake and trunc(v_piece_liability)<>v_piece_liability) then
+  raise exception 'Responsabilidade não divisível em moedas inteiras';
  end if;
  v_seller_basis:=v_position.cost_basis*v_piece_stake/v_position.stake;
  if round(v_seller_basis,2)<>v_seller_basis then raise exception 'Custo não divisível'; end if;
