@@ -29,7 +29,7 @@ export function resalePnl(salePrice: number, acquisitionCost: number): number {
  return Math.round((salePrice-acquisitionCost)*100)/100;
 }
 
-/** Smallest whole-stake lot that keeps liability and owner's cost basis exact to cents. */
+/** Smallest whole-stake lot with whole-coin liability and exact-cent cost basis. */
 export function resaleLotStep(stake: number, liability: number, costBasis: number): number {
  const cents = (n:number) => Math.round(n * 100);
  if (!Number.isSafeInteger(stake) || stake <= 0 ||
@@ -37,5 +37,9 @@ export function resaleLotStep(stake: number, liability: number, costBasis: numbe
   Math.abs(cents(liability)-liability*100)>1e-7 ||
   Math.abs(cents(costBasis)-costBasis*100)>1e-7) throw new Error('Posição inválida para fracionamento');
  const gcd=(a:number,b:number):number=>{while(b){[a,b]=[b,a%b];}return a;};
- return stake/gcd(gcd(stake,cents(liability)),cents(costBasis));
+ const lcm=(a:number,b:number)=>a/gcd(a,b)*b;
+ const liabilityStep=(stake*100)/gcd(stake*100,cents(liability));
+ const basisStep=stake/gcd(stake,cents(costBasis));
+ const step=lcm(liabilityStep,basisStep);
+ return step<=stake?step:stake;
 }
