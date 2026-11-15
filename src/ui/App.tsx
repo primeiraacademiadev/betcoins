@@ -6,7 +6,7 @@ import { useToast } from './ToastProvider';
 import { classifyError, errorFor, errorText, validateOdd, validateStake, validatePrice, validateYtd, validateDateRange } from '../lib/uxErrors';
 import { acceptanceTerms, formatCoins, positionPayoff, resaleLotStep, type PositionSale, type PositionSettlement, type Application, type Competitor, type LedgerEntry, type Listing, type Market, type Offer, type Outcome, type Position, type Ranking, type Wallet } from '../lib/domain';
 type Sprint = {id:string;name:string;kind:string;starts_at:string;ends_at:string;state:string};
-type SprintResult = {competitor_id:string;nickname:string;start_ytd:number;end_ytd:number;return_pct:number};
+import { rankSprintResults, type SprintResult } from '../lib/sprintRanking';
 type WalletReconciliation = {owner_id:string;nickname:string;actual_available:number;ledger_available:number;available_difference:number;actual_reserved:number;ledger_reserved:number;reserved_difference:number;actual_issued:number;ledger_issued:number;issued_difference:number;balanced:boolean};
 type Tab = 'overview'|'markets'|'wallet'|'admissions'|'admin'|'account';
 const title:Record<Tab,string> = {overview:'Campeonato',markets:'Mercados',wallet:'Carteira',admissions:'Admissões',admin:'Gestão',account:'A minha conta'};
@@ -40,7 +40,7 @@ export function App(){
  const [ledger,setLedger]=useState<LedgerEntry[]>([]);const [isCompetitor,setIsCompetitor]=useState(false),[isAdmin,setIsAdmin]=useState(false);
  const [rankMode,setRankMode]=useState<'wealth'|'relative'>('wealth');
  const [rankWindow,setRankWindow]=useState<'now'|'week'|'month'>('now'),[rankAsOf,setRankAsOf]=useState<string|null>(null);
- const [sprints,setSprints]=useState<Sprint[]>([]),[selectedSprint,setSelectedSprint]=useState(''),[sprintResults,setSprintResults]=useState<SprintResult[]>([]);
+ const [sprints,setSprints]=useState<Sprint[]>([]),[selectedSprint,setSelectedSprint]=useState(''),[sprintRanking,setSprintRanking]=useState<{id:string;status:'loading'|'ready'|'error';rows:SprintResult[]}>({id:'',status:'loading',rows:[]});
  const [sprintName,setSprintName]=useState(''),[sprintKind,setSprintKind]=useState('weekly'),[sprintStart,setSprintStart]=useState(''),[sprintEnd,setSprintEnd]=useState('');
  const [acceptAmounts,setAcceptAmounts]=useState<Record<string,string>>({}); const [settlements,setSettlements]=useState<Record<string,string>>({});
  async function load(){
@@ -63,7 +63,17 @@ export function App(){
  }
  useEffect(()=>{if(!client)return;client.auth.getUser().then(({data})=>setUser(data.user));const {data:{subscription}}=client.auth.onAuthStateChange((_e,s)=>setUser(s?.user||null));return()=>subscription.unsubscribe()},[]);
  useEffect(()=>{if(user)void load();else {setWallet(null);setCompetitors([]);setProfile(null)}},[user]);
- useEffect(()=>{if(!user||!selectedSprint)return;rpc<SprintResult[]>('get_sprint_rankings',{p_sprint:selectedSprint}).then(setSprintResults).catch(e=>toast.error(errorText(classifyError(e))))},[user,selectedSprint,sprints]);
+ useEffect(()=>{
+  if(!user||!selectedSprint){setSprintRanking({id:'',status:'loading',rows:[]});return;}
+  let active=true;
+  setSprintRanking({id:selectedSprint,status:'loading',rows:[]});
+  rpc<SprintResult[]>('get_sprint_rankings',{p_sprint:selectedSprint}).then(rows=>{
+   if(active)setSprintRanking({id:selectedSprint,status:'ready',rows});
+  }).catch(e=>{
+   if(active){setSprintRanking({id:selectedSprint,status:'error',rows:[]});toast.error(errorText(classifyError(e)));}
+  });
+  return()=>{active=false;};
+ },[user,selectedSprint,sprints]);
  async function act(fn:()=>Promise<unknown>, successMessage:string){setBusy(true);try{await fn();if(successMessage)toast.success(successMessage);await load()}catch(e){toast.error(errorText(classifyError(e)))}finally{setBusy(false)}}
  async function login(provider:'google'|'github'){if(!client)return;const {error}=await client.auth.signInWithOAuth({provider,options:{redirectTo:window.location.origin+import.meta.env.BASE_URL}});if(error)toast.error(errorText(classifyError(error)))}
  const [selectedMarket,setSelectedMarket]=useState<string>(''),[selectedOutcome,setSelectedOutcome]=useState<string>(''),[side,setSide]=useState<'back'|'lay'>('back'),[odds,setOdds]=useState('2'),[stake,setStake]=useState('10'),[score,setScore]=useState('0'),[nickname,setNickname]=useState(''),[listingPrice,setListingPrice]=useState<Record<string,string>>({}),[listingQuantity,setListingQuantity]=useState<Record<string,string>>({}),[marketName,setMarketName]=useState(''),[marketDate,setMarketDate]=useState('2026-12-31T23:59'),[marketKind,setMarketKind]=useState('annual'),[marketCategory,setMarketCategory]=useState('winner'),[marketCandidates,setMarketCandidates]=useState<string[]>([]);
@@ -116,7 +126,14 @@ export function App(){
     </div>):<Empty text="Sem espectadores para a data selecionada."/>}
     {rankings.some(r=>r.valuation_status==='contabilistico_legacy')&&<p className="footnote">Ranking contabilístico básico disponível. Histórico, exposição e P&L de revendas aguardam migração da base de dados.</p>}
     <p className="footnote">Avaliação <strong>contabilística, sem cotação de mercado</strong>: património = disponível + reservado; valorização relativa = (património − créditos) / créditos. Posições abertas e exposição representam o estado atual (não são reconstruídas nas datas históricas). O P&L indicado inclui apenas revendas registadas; não representa o lucro total nem antecipa ganhos de apostas em aberto. A ausência de liquidez impede uma avaliação fiável ao preço de mercado.</p></section></div>
-    {sprints.length>0&&<section className="panel"><div className="panel-head"><h2>Sprints semanais e mensais</h2></div><div className="market-pills">{sprints.map(sp=><button key={sp.id} className={'market-pill '+(selectedSprint===sp.id?'selected':'')} onClick={()=>setSelectedSprint(sp.id)}>{sp.name} · {sp.state}</button>)}</div>{selectedSprint&&sprintResults.length>0?sprintResults.map((r,i)=><div className="rank-row" key={r.competitor_id}><span className="rank-number">{i+1}.</span><span className="rank-name">{r.nickname}</span><strong className={r.return_pct>=0?'positive':'negative'}>{r.return_pct>0?'+':''}{Number(r.return_pct).toFixed(2)} pp</strong></div>):<p className="footnote">Seleciona um sprint com snapshots inicial e final para consultar a evolução do YTD (pontos percentuais).</p>}</section>}
+    {sprints.length>0&&<section className="panel"><div className="panel-head"><h2>Sprints semanais e mensais</h2></div><div className="market-pills">{sprints.map(sp=><button key={sp.id} className={'market-pill '+(selectedSprint===sp.id?'selected':'')} onClick={()=>setSelectedSprint(sp.id)}>{sp.name} · {sp.state}</button>)}</div>
+     <p className="footnote">ΔYTD entre os snapshots inicial e final do próprio sprint, em pontos percentuais. Os lugares empatados são partilhados. Esta classificação não valida resultados nem liquida mercados.</p>
+     {!selectedSprint?<p className="footnote">Seleciona um sprint para consultar os snapshots.</p>
+      :sprintRanking.id!==selectedSprint||sprintRanking.status==='loading'?<p className="footnote" role="status">A carregar a classificação do sprint…</p>
+      :sprintRanking.status==='error'?<p className="field-error" role="alert">Não foi possível carregar a classificação deste sprint. Volta a selecionar o período ou atualiza os dados.</p>
+      :sprintRanking.rows.length?rankSprintResults(sprintRanking.rows).map(r=><div className="rank-row" key={r.competitor_id}><span className="rank-number">{r.place}.</span><span className="rank-name">{r.nickname}<small className="movement-date">Inicial: {Number(r.start_ytd).toFixed(4)}% · Final: {Number(r.end_ytd).toFixed(4)}%</small></span><strong className={r.return_pct>=0?'positive':'negative'}>{r.return_pct>0?'+':''}{Number(r.return_pct).toFixed(4)} pp</strong></div>)
+      :<p className="footnote">Sem pares de snapshots inicial e final para apurar este sprint. Não é possível reconstruir o histórico a partir do YTD atual.</p>}
+    </section>}
     {isCompetitor&&<section className="panel"><div className="panel-head"><h2>Atualizar a minha valorização YTD</h2></div><div className="inline-form"><input aria-label="Valorização YTD em percentagem" type="number" step=".01" value={score} onChange={e=>setScore(e.target.value)}/>{ytdError&&<span className="field-error" role="alert">{errorText(ytdError)}</span>}<Button disabled={busy||Boolean(ytdError)} onClick={()=>void act(()=>rpc('set_my_score',{p_ytd:Number(score)}),'Valorização YTD atualizada.')}>Guardar score</Button></div><p className="footnote">O score é declarado pelo próprio concorrente e fica registado no histórico.</p></section>}
     <section className="callout"><div><span className="eyebrow">ENTRA NO JOGO</span><h2>1 000 BetCoins para começar.</h2><p>Negocia odds, compra posições e tenta antecipar o vencedor. Sem dinheiro real.</p></div><Button onClick={()=>setTab('markets')}>Explorar mercados <ArrowRight size={17}/></Button></section>
    </>}
