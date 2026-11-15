@@ -34,7 +34,7 @@ describe('validação contextual', () => {
 });
 describe('catálogo de erros RPC', () => {
  it('não confunde saldo insuficiente com falta de autorização', () => {
-  expect(classifyError({code:'23514', detailMessage:'saldo insuficiente'}).code).toBe('INVALID_SELECTION');
+  expect(classifyError({code:'23514', detailMessage:'saldo insuficiente'}).code).toBe('BALANCE_INSUFFICIENT');
   expect(classifyError({code:'42501',detailMessage:'permission denied'}).code).toBe('NOT_AUTHORIZED');
   expect(classifyError({detailMessage:'saldo insuficiente'}).code).toBe('BALANCE_INSUFFICIENT');
  });
