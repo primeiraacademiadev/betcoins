@@ -44,3 +44,10 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150002_spectator_rankings.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150003_partial_resale.sql
           psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
+      - name: Clean-install baseline and economic parity smoke test
+        run: |
+          createdb betcoins_baseline
+          # Roles are cluster-wide and were created in the first test database.
+          sed '/^create role anon /d; /^create role authenticated /d' tests/db/bootstrap.sql | PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1
+          PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/baselines/20261115_full_install.sql
+          PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql

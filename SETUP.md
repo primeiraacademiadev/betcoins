@@ -12,7 +12,11 @@
 ## 1. PostgreSQL e funções
 
 1. Criar projeto Supabase Free.
-2. Executar por ordem as migrações de `supabase/migrations/`, idealmente via CLI de migrations. A migração `001` cria contas e funções; `002` cria os sprints.
+2. **Instalação nova e vazia:** escolher exatamente um dos seguintes caminhos:
+   - Método recomendado para projetos geridos por Supabase CLI: aplicar por ordem os sete ficheiros de `supabase/migrations/`, conservando o histórico de migrações.
+   - Método de instalação SQL manual: executar **apenas** `supabase/baselines/20261115_full_install.sql`, que contém os mesmos sete ficheiros, sequencialmente. Registar que foi utilizada a baseline e não executar depois os sete ficheiros outra vez.
+3. **Projeto existente:** nunca executar a baseline. Antes de qualquer alteração, consultar `supabase_migrations.schema_migrations` (ou o histórico oficial do projeto); comparar as versões efetivamente aplicadas com os sete nomes em `supabase/migrations/`, fazer backup e aplicar **apenas as versões em falta**, pela ordem original. Não deduzir o estado remoto a partir do CI ou de GitHub Pages.
+4. **Atualizações futuras:** criar novas migrações aditivas; manter os sete ficheiros originais e a baseline de 2026-11-15 imutáveis. Uma nova baseline deverá ter data/versão própria e ser verificada num PostgreSQL descartável.
 3. Criar uma conta de teste com social login.
 4. No SQL Editor, **como administrador da BD**, atribuir o primeiro administrador e concorrente usando o UUID da conta de teste:
 
@@ -57,7 +61,7 @@ O deployment só deve ser ativado após passar os testes com Supabase de teste.
 
 ## 5. Créditos semanais
 
-A função `grant_weekly()` distribui 1 000 BetCoins aos espectadores elegíveis da semana UTC atual e rejeita execução por não administradores. O botão administrativo permite executar manualmente, sem duplicação na mesma semana.
+A função `grant_weekly()` distribui 1 000 BetCoins aos espectadores elegíveis, incluindo semanas em atraso desde o registo dentro do campeonato, e rejeita execução por não administradores. O botão administrativo permite executar manualmente, sem duplicação na mesma semana.
 
 **Agendamento automático ainda não configurado.** Na fase de setup decidir entre pg_cron controlado pelo operador e uma automação GitHub Actions protegida. Não colocar credenciais privilegiadas numa aplicação pública.
 
@@ -86,7 +90,7 @@ A função `grant_weekly()` distribui 1 000 BetCoins aos espectadores elegíveis
 
 ## Limitações conscientes da V1
 
-- Mercado secundário: **revenda integral** de uma posição; revenda parcial futura.
+- Mercado secundário: suporta **revenda integral e parcial por lotes indivisíveis** após aplicação da migração `202611150003_partial_resale.sql`.
 - Book de ofertas: manual e P2P, sem motor automático de correspondência nem promessa de liquidez.
 - Ranking de espectadores usa saldos contabilísticos (disponível + reservado); não é uma marcação a mercado independente. O retorno relativo simples é `(património - créditos recebidos) / créditos recebidos`. O resultado definitivo deve ser avaliado após as liquidações.
 - Sprints: captura manual de snapshots nos limites; não existe recolha automática de scores.
