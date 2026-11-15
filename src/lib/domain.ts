@@ -9,6 +9,8 @@ export type Outcome = { id: string; market_id: string; label: string; competitor
 export type Offer = { id: string; market_id: string; outcome_id: string; owner_id: string; side: OrderSide; odds: number; stake_remaining: number; created_at: string };
 export type Position = { id: string; trade_id: string; owner_id: string; side: OrderSide; outcome_id: string; market_id: string; stake: number; liability: number; cost_basis?: number; status: string };
 export type Listing = { id: string; position_id: string; seller_id: string; price: number; state: string; created_at: string; side:'back'|'lay';market_id:string;outcome_id:string;stake:number;liability:number;outcome_label:string;market_title:string };
+export type PositionSale = { listing_id:string;position_id:string;seller_id:string;buyer_id:string;seller_cost_basis:number;sale_price:number;realized_pnl:number;traded_at:string };
+export type PositionSettlement = { position_id:string;owner_id:string;payoff:number;final_cost_basis:number;realized_pnl:number;settled_at:string };
 export type LedgerEntry = { id:number;reason:string;reference:string;available_delta:number;reserved_delta:number;created_at:string };
 export type Wallet = { available: number; reserved: number; total_issued: number };
 export type Ranking = { owner_id: string; nickname: string; available: number; reserved: number; issued: number; wealth: number; relative_pct: number|null; realized_resale_pnl: number; open_positions: number|null; exposure: number|null; valuation_status: string };
@@ -42,4 +44,15 @@ export function resaleLotStep(stake: number, liability: number, costBasis: numbe
  const basisStep=stake/gcd(stake,cents(costBasis));
  const step=lcm(liabilityStep,basisStep);
  return step<=stake?step:stake;
+}
+
+/** Gross cash returned at resolution to the final owner, NOT the collateral balance. */
+export function positionPayoff(stake: number, liability: number): number {
+ if (!Number.isFinite(stake) || !Number.isFinite(liability) || stake<=0 || liability<0) throw new Error('Posição inválida');
+ return Math.round((stake+liability)*100)/100;
+}
+/** P&L for final owner after resolution, based on their actual acquisition cost. */
+export function positionSettlementPnl(payoff: number, costBasis: number): number {
+ if(!Number.isFinite(payoff)||payoff<0||!Number.isFinite(costBasis)||costBasis<0) throw new Error('Liquidação inválida');
+ return Math.round((payoff-costBasis)*100)/100;
 }
