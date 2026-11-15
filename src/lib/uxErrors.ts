@@ -32,9 +32,10 @@ export function errorFor(code:UXErrorCode):UXError{return {code,...catalog[code]
 export function errorText(e:UXError):string{return e.title+' — '+e.explanation+' '+e.action;}
 /** Classify by structured PostgREST/SQLSTATE code when possible; legacy text only as a fallback. */
 export function classifyError(error:unknown):UXError {
- const e=error as {code?:unknown;message?:unknown;status?:unknown};
+ const e=error as {code?:unknown;message?:unknown;detailMessage?:unknown;status?:unknown};
  const code=typeof e?.code==='string'?e.code:'';
- const text=typeof e?.message==='string'?e.message.toLowerCase():'';
+ const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
+ const text=typeof raw==='string'?raw.toLowerCase():'';
  if(code==='23505')return errorFor('DUPLICATE_ACTION');
  if(code==='23514')return errorFor('INVALID_SELECTION');
  if(code==='42501'||text.includes('sem permissão')||text.includes('permission denied')||text.includes('não permitido'))return errorFor('NOT_AUTHORIZED');
