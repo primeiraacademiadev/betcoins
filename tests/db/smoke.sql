@@ -102,7 +102,7 @@ update public.profiles
  where id='33333333-3333-4333-8333-333333333333';
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
-do $declare v_before integer; v_after integer; v_expected integer;begin
+do $$declare v_before integer; v_after integer; v_expected integer;begin
  select count(*) into v_before from public.weekly_grants
   where owner_id='33333333-3333-4333-8333-333333333333';
  perform public.grant_weekly();
@@ -116,12 +116,12 @@ do $declare v_before integer; v_after integer; v_expected integer;begin
   raise exception 'Recuperação semanal incorreta: % / % / %',v_before,v_after,v_expected;
  end if;
  if public.grant_weekly()<>0 then raise exception 'Recarga não idempotente'; end if;
-end $;
-do $begin
+end $$;
+do $$begin
  if exists(select 1 from public.reconcile_wallets() r where not r.balanced) then
   raise exception 'Reconciliação falhou depois das recargas e da liquidação';
  end if;
-end $;
+end $$;
 -- Reconciliation must be able to report a discrepancy, without repairing balances.
 reset role;
 begin;
@@ -129,13 +129,13 @@ update public.wallets set available=available+1
  where owner_id='33333333-3333-4333-8333-333333333333';
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
-do $begin
+do $$begin
  if not exists(select 1 from public.reconcile_wallets() r
   where r.owner_id='33333333-3333-4333-8333-333333333333'
    and not r.balanced and r.available_difference=1) then
   raise exception 'Reconciliação não detetou divergência';
  end if;
-end $;
+end $$;
 rollback;
 -- Permission check: authenticated role must not write wallets directly.
 set role authenticated;
