@@ -1,0 +1,68 @@
+# BetCoins — Regras canónicas do Campeonato 2026
+
+> Versão de decisão: 15-11-2026. Documento de produto da [issue #1](https://github.com/primeiraacademiadev/betcoins/issues/1).
+> Distinguir **regra aprovada**, **comportamento atualmente implementado** e **decisão ainda por validar**. Isto não constitui, por si só, suporte técnico para liquidação de empates ou novos mercados.
+
+## 1. Acesso, papéis e elegibilidade
+
+- O login social Google/GitHub serve para **entrar ou criar conta**. Não equivale a entrar no campeonato. Qualquer utilizador autenticado começa com acesso à plataforma e identidade pública/nickname.
+- Papéis: espectador, concorrente admitido e administrador técnico. Um concorrente pede admissão; o eleitorado é congelado na abertura da candidatura. Apenas concorrentes elegíveis votam; o candidato não vota em si.
+- **Implementado:** aprovação por **maioria absoluta do eleitorado elegível** (> 50%); rejeição quando os votos negativos tornam matematicamente impossível atingir essa maioria; as abstenções não reduzem o denominador.
+- Créditos iniciais por carteira: 1 000 ฿, uma só vez. Dotações semanais: 1 000 ฿ apenas para espetadores elegíveis, por semana UTC, idempotentes e recuperáveis, nunca anteriores ao registo.
+- **A validar com os jogadores:** se concorrentes também podem apostar (não recebem dotação semanal) e se são permitidas apostas no próprio concorrente.
+
+## 2. Calendário, declarações e snapshots
+
+- Campeonato anual de 2026: fecho de referência **31-12-2026**; a data técnica de fecho e o instante da captura devem ser controlados pelo servidor.
+- Sprints semanais e mensais; classificações e mercados dependem de snapshots YTD identificados e congelados.
+- Os concorrentes podem atualizar os valores YTD durante o período. Os snapshots efetivamente recolhidos ficam imutáveis.
+- **Duas modalidades de aposta distintas, aprovadas:**
+  1. **Valor do snapshot:** previsão do **valor YTD absoluto no snapshot de fecho** do período atual.
+  2. **Diferença entre snapshots:** previsão de **ΔYTD = YTD do snapshot de fecho atual − YTD do snapshot do período anterior** (em **pontos percentuais**, sem capitalização).
+- A diferença não deve ser confundida com a rentabilidade composta entre valores YTD nem com a stake/odd da aposta.
+- A modalidade escolhida é atributo do mercado, visível ao utilizador; o motor não deve adivinhar a modalidade.
+- **Exemplo:** snapshot anterior 12,00% e snapshot do fecho atual 16,50%. No mercado «valor do snapshot», a referência é **16,50%**; no mercado «diferença entre snapshots», a referência é **+4,50 p.p.** Estes são resultados diferentes, não duas maneiras de apresentar o mesmo mercado.
+- **Implementação atual:** os sprints calculam ΔYTD por `round(b.ytd-a.ytd,4)`, a partir dos snapshots `start` e `end` **do próprio sprint**. A distinção entre *snapshot do período anterior* e *snapshot de início do sprint* e a modalidade «valor absoluto do snapshot» carecem de extensão explícita do modelo de mercados (não estão implementadas).
+- **A validar com o grupo:** horário semanal de referência e fuso horário, ausência de atualização, último valor válido e eventual penalização de **1 p.p.** (foi proposta, ainda não está automatizada); inscrições a meio do período, correções/tardios, retiradas.
+
+## 3. Outcomes, mercados P2P e empate
+
+- Mercados têm outcomes explícitos, mutuamente exclusivos na resolução regular, e fecham na hora do servidor.
+- Uma oferta BACK representa posição a favor de um outcome; LAY é o lado contrário. Uma odd decimal 1,20 e stake BACK 10 ฿ implicam responsabilidade LAY 2 ฿; colateral total 12 ฿; sem taxas no MVP.
+- A aceitação P2P pode ser parcial dentro dos limites da oferta. A revenda de posições preserva colateral, risco, custo de aquisição e contabilidade; só há saída quando existe comprador.
+- **Regra de empate aprovada (analogia à roleta):** o empate equivale ao **zero** ao apostar em **preto ou vermelho**. Uma aposta a favor de qualquer dos dois resultados perde; **não há devolução automática de stake** apenas por empate.
+- **Exemplo:** num mercado «A vence / B vence», se A e B empatarem, quem apostou em A perde e quem apostou em B perde, como vermelho/preto perante o zero. Isto **não equivale** a declarar vencedor um dos dois outcomes nem a anular o mercado.
+- **Lacuna técnica bloqueante:** o settlement P2P atual é binário BACK/LAY: escolhe um `winner_outcome_id` e atribui a soma dos colaterais a um dos lados; a totalidade de BetCoins em circulação é conservada. Não existe ainda terceiro resultado «empate / zero», nem carteira de tesouraria que receba a perda de ambos. **Não utilizar `settle_market` para fingir que esta regra já está suportada.**
+- **Decisão técnica pendente:** definir e implementar destino das perdas de ambos os lados sem criar/destruir BetCoins (por exemplo, carteira técnica/tesouraria da plataforma), elegibilidade de quem pode participar nessa contraparte e contabilização no P&L. Exige desenho, migração, testes concorrentes e revisão antes de ativar mercados que possam empatar.
+- **Distinguir de anulação:** `void` por falha técnica, retirada/desistência ou resultado não validável é um mecanismo diferente de **empate desportivo/competitivo**. Política de cancelamento/devolução e efeito sobre revendas anteriores ainda necessita de validação.
+
+## 4. Liquidação, transparência e rankings
+
+- O resultado oficial é validado pela gestão após fechar o mercado; liquidação transacional, idempotente e auditável, nunca antes do fecho.
+- Para a liquidação regular, o P&L do último titular é **pagamento final − custo de aquisição**; o P&L de revendas anteriores permanece realizado e separado.
+- Património contabilístico dos espetadores = disponível + reservado. Não é uma avaliação *mark-to-market* nem se deve chamar lucro a créditos atribuídos.
+- Ranking relativo contabilístico existente: (património contabilístico − créditos recebidos) / créditos recebidos; uma métrica de retorno económico robusta com fluxos externos e preços de referência fica para evolução posterior.
+- Os valores YTD são **declarados pelos concorrentes**, não verificados automaticamente por corretora; a UI deve indicar esta limitação.
+
+## 5. Matriz de decisões e implementação
+
+| Tema | Regra/decisão | Estado de implementação |
+| --- | --- | --- |
+| Login versus candidatura | Jornadas separadas | Implementado |
+| Votação por maioria absoluta | Eleitorado congelado | Implementado |
+| Duas modalidades: snapshot absoluto e Δ do anterior | Aprovadas como regra de produto | **Por implementar** no modelo/geração/liquidação de mercados |
+| ΔYTD aritmético do sprint | Diferença de snapshots em p.p. | Implementado para start/end do mesmo sprint |
+| Empate como zero na roleta | Ambas as apostas preto/vermelho perdem | **Por implementar**: conservação e destinatário das perdas |
+| Revenda parcial por lotes | Proporções e cêntimos exatos | Implementado |
+| Créditos iniciais e semanais | 1 000 ฿, com elegibilidade | Implementado |
+| Captura automática, ausência, penalização, timezone | Validar regras | Pendente |
+| Retiradas, void, reversão auditada | Definir procedimento | Pendente |
+| Preço de referência / mark-to-market | Não inventar liquidez | Não implementado; assumido como limitação |
+
+## 6. Critérios para próximos tickets
+
+1. Novo tipo explícito de mercado com `snapshot_value` e `snapshot_delta_previous`, origem dos snapshots por período, dados auditáveis e testes com 12,00% → 16,50%.
+2. Resolver tecnicamente **empate/zero** em P2P sem violar invariantes de conservação, com uma decisão clara sobre a tesouraria. Não confundir zero com anulação/void.
+3. Validar com os jogadores as regras ainda pendentes e atualizar a UI/termos do campeonato quando forem acordadas.
+
+**Este documento fecha o trabalho de inventariar e fixar as regras conhecidas da E0, mas não representa aprovação das decisões identificadas como pendentes nem implementação das lacunas técnicas.**
