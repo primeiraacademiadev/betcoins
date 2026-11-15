@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sprintReturn, liability, impliedProbability, resalePnl, resaleLotStep, positionPayoff, positionSettlementPnl } from './domain';
+import { sprintReturn, liability, impliedProbability, resalePnl, resaleLotStep, positionPayoff, positionSettlementPnl, acceptanceTerms } from './domain';
 describe('regras económicas', () => {
  it('variação do sprint é a diferença de YTD em pontos percentuais', () => expect(sprintReturn(10,21)).toBe(11));
  it('a diferença de YTD suporta perdas completas e valores negativos', () => expect(sprintReturn(-100,-85)).toBe(15));
@@ -30,4 +30,16 @@ describe('liquidação económica de posições', () => {
  it('comprador BACK a 8 perde 8 se não vencer', () => expect(positionSettlementPnl(0,8)).toBe(-8));
  it('LAY que não acerta recebe zero e perde o custo', () => expect(positionSettlementPnl(0,3)).toBe(-3));
  it('separa resultado de revenda do resultado posterior do comprador', () => {expect(resalePnl(8,10)).toBe(-2);expect(positionSettlementPnl(12,8)).toBe(4);});
+});
+
+describe('aceitação de ofertas P2P', () => {
+ it('autor BACK 10 / odd 1,20: aceitante LAY reserva 2, ganha 10 e recebe 12', () => {
+  expect(acceptanceTerms('back',10,1.20)).toEqual({side:'lay',risk:2,profit:10,payout:12});
+ });
+ it('autor LAY 10 / odd 1,20: aceitante BACK reserva 10, ganha 2 e recebe 12', () => {
+  expect(acceptanceTerms('lay',10,1.20)).toEqual({side:'back',risk:10,profit:2,payout:12});
+ });
+ it('aceitação parcial recalcula tudo para 5 de stake BACK', () => {
+  expect(acceptanceTerms('back',5,1.20)).toEqual({side:'lay',risk:1,profit:5,payout:6});
+ });
 });
