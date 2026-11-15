@@ -100,28 +100,32 @@ reset role;
 update public.profiles
  set created_at=now()-interval '15 days'
  where id='33333333-3333-4333-8333-333333333333';
+-- Read private grant records as the privileged smoke-test session.
+create temp table _grant_before as
+ select count(*)::int as n from public.weekly_grants
+ where owner_id='33333333-3333-4333-8333-333333333333';
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
-do $$declare v_before integer; v_after integer; v_expected integer;begin
- select count(*) into v_before from public.weekly_grants
-  where owner_id='33333333-3333-4333-8333-333333333333';
- perform public.grant_weekly();
+select public.grant_weekly();
+do $$begin
+ if public.grant_weekly()<>0 then raise exception 'Recarga não idempotente'; end if;
+ if exists(select 1 from public.reconcile_wallets() r where not r.balanced) then
+  raise exception 'Reconciliação falhou depois das recargas e da liquidação';
+ end if;
+end $$;
+reset role;
+do $$declare v_after integer;v_expected integer;begin
  select count(*) into v_after from public.weekly_grants
   where owner_id='33333333-3333-4333-8333-333333333333';
  select count(*) into v_expected from generate_series(
   date_trunc('week',(now()-interval '15 days') at time zone 'UTC'),
   date_trunc('week',now() at time zone 'UTC'),interval '7 days'
  ) g;
- if v_after<>v_expected or v_after<=v_before then
-  raise exception 'Recuperação semanal incorreta: % / % / %',v_before,v_after,v_expected;
- end if;
- if public.grant_weekly()<>0 then raise exception 'Recarga não idempotente'; end if;
-end $$;
-do $$begin
- if exists(select 1 from public.reconcile_wallets() r where not r.balanced) then
-  raise exception 'Reconciliação falhou depois das recargas e da liquidação';
+ if v_after<>v_expected or v_after<=(select n from _grant_before) then
+  raise exception 'Recuperação semanal incorreta: % / %',v_after,v_expected;
  end if;
 end $$;
+drop table _grant_before;
 -- Reconciliation must be able to report a discrepancy, without repairing balances.
 reset role;
 begin;
@@ -168,5 +172,102 @@ do $$declare r record;begin
     where id='33333333-3333-4333-8333-333333333333')
   ) where owner_id='33333333-3333-4333-8333-333333333333') then
   raise exception 'Histórico inclui utilizador antes da inscrição';
+ end if;
+end $$;
+
+-- The partial resale is a split of BOTH sides, not a split of collateral only.
+-- Match BACK 10 / LAY 30 (odd 4), list 3 / 9 and retain 7 / 21.
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+select public.create_market('Revenda parcial teste','weekly','winner',now()+interval '10 minutes',
+ array['11111111-1111-4111-8111-111111111111'::uuid,'22222222-2222-4222-8222-222222222222'::uuid]);
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+select public.place_offer(
+ (select o.id from public.outcomes o
+  join public.markets m on m.id=o.market_id
+  where m.title='Revenda parcial teste'
+    and o.competitor_id='11111111-1111-4111-8111-111111111111'),
+ 'back',4.00,10);
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',false);
+select public.accept_offer(
+ (select f.id from public.offers f join public.markets m on m.id=f.market_id
+  where m.title='Revenda parcial teste'),10);
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+-- A partial listing cannot invent a non-exact stake, cost or collateral proportion.
+select public.list_position(
+ (select p.id from public.positions p join public.markets m on m.id=p.market_id
+  where m.title='Revenda parcial teste' and p.side='back'),4,3);
+do $$declare x record;begin
+ select * into x from public.get_active_listings()
+  where market_title='Revenda parcial teste';
+ if not found or x.stake<>3 or x.liability<>9 then
+  raise exception 'Marketplace não mostra o lote exato';
+ end if;
+end $$;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+select public.buy_position(
+ (select id from public.get_active_listings() where market_title='Revenda parcial teste'));
+-- Check exact remaining slice, buyer ownership, seller P&L, both sides and conserved supply.
+reset role;
+do $$declare t numeric;issued numeric;begin
+ select sum(available+reserved),sum(total_issued) into t,issued from public.wallets;
+ if t<>issued then raise exception 'Partial resale minted/burned coins'; end if;
+ if (select count(*) from public.trades t join public.markets m on m.id=t.market_id
+    where m.title='Revenda parcial teste')<>2 then raise exception 'Split missing child trade'; end if;
+ if (select count(*) from public.positions p join public.markets m on m.id=p.market_id
+    where m.title='Revenda parcial teste')<>4 then raise exception 'Missing matched BACK/LAY legs'; end if;
+ if (select sum(stake) from public.positions p join public.markets m on m.id=p.market_id
+    where m.title='Revenda parcial teste' and side='back')<>10 then raise exception 'Stake not conserved'; end if;
+ if (select sum(liability) from public.positions p join public.markets m on m.id=p.market_id
+    where m.title='Revenda parcial teste' and side='lay')<>30 then raise exception 'Liability not conserved'; end if;
+ if not exists(select 1 from public.positions p join public.markets m on m.id=p.market_id
+    where m.title='Revenda parcial teste' and p.side='back'
+     and p.owner_id='11111111-1111-4111-8111-111111111111'
+     and p.stake=3 and p.liability=9 and p.cost_basis=4) then
+   raise exception 'Buyer lot incorrect';
+ end if;
+ if not exists(select 1 from public.positions p join public.markets m on m.id=p.market_id
+    where m.title='Revenda parcial teste' and p.side='back'
+     and p.owner_id='22222222-2222-4222-8222-222222222222'
+     and p.stake=7 and p.liability=21 and p.cost_basis=7) then
+   raise exception 'Seller residual lot incorrect';
+ end if;
+ if not exists(select 1 from public.position_sales ps
+    where ps.sale_price=4 and ps.seller_cost_basis=3 and ps.realized_pnl=1) then
+  raise exception 'Sale P&L incorrect';
+ end if;
+end $$;
+-- Neither the buyer nor the seller can execute the consumed listing twice.
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+do $$begin
+ begin
+  perform public.buy_position((select ps.listing_id from public.position_sales ps
+   where ps.buyer_id='11111111-1111-4111-8111-111111111111'
+    and ps.sale_price=4));
+  raise exception 'DOUBLE_PURCHASE_SUCCEEDED';
+ exception when others then
+  if sqlerrm='DOUBLE_PURCHASE_SUCCEEDED' then raise; end if;
+ end;
+end $$;
+-- Settlement pays out BOTH split trades; original loser keeps no collateral.
+reset role;
+update public.markets set closes_at=now()-interval '1 second'
+ where title='Revenda parcial teste';
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+select public.settle_market(
+ (select id from public.markets where title='Revenda parcial teste'),
+ (select o.id from public.outcomes o join public.markets m on m.id=o.market_id
+  where m.title='Revenda parcial teste'
+   and o.competitor_id='11111111-1111-4111-8111-111111111111'));
+reset role;
+do $$declare t numeric;issued numeric;begin
+ select sum(available+reserved),sum(total_issued) into t,issued from public.wallets;
+ if t<>issued then raise exception 'Settlement of partial lots changed total supply'; end if;
+ if (select count(*) from public.trades t join public.markets m on m.id=t.market_id
+  where m.title='Revenda parcial teste' and t.settled_at is not null)<>2 then
+  raise exception 'Split trades not settled';
  end if;
 end $$;
