@@ -13,9 +13,9 @@ Ter um jogo utilizável para o Campeonato 2026 (31-12-2026), com um ranking de i
 ### E0 — Regras e decisões (P0)
 - Definir elegibilidade e papéis (conta com acesso, espectador, concorrente, administrador técnico).
 - Admissão de concorrentes: quem vota, maioria sobre universo ou votos expressos, abstém-se, duração, empates, desistência.
-- Regras de medição YTD, scores congelados, atualização tardia, desempate e aprovação da classificação final.
+- Regras de medição YTD e snapshots congelados: duas modalidades distintas (valor absoluto do snapshot e ΔYTD entre snapshot anterior e atual); atualização tardia, desempate e aprovação da classificação final. Ver [regras canónicas](docs/CHAMPIONSHIP_RULES_2026.md).
 - Calendário e timezone dos sprints e do campeonato: semana, mês, snapshots e liquidação.
-- Regras de mercados: outcomes mutuamente exclusivos, concorrentes elegíveis, retirada/desistência, fecho técnico no instante de referência.
+- Regras de mercados: outcomes mutuamente exclusivos, concorrentes elegíveis, retirada/desistência, fecho técnico; empate tratado como zero da roleta (ambos os lados perdem), **ainda não suportado pela liquidação P2P** e sujeito a desenho de tesouraria.
 - Regras monetárias: emissões iniciais, recarga semanal exclusiva de espectadores, precisão, reservas, taxas = 0, arredondamentos.
 - Regras de avaliação/rentabilidade dos espectadores, especialmente posições sem preço e créditos periódicos.
 
@@ -29,7 +29,7 @@ Ter um jogo utilizável para o Campeonato 2026 (31-12-2026), com um ranking de i
 - Candidatura e votação por concorrentes, contagem e decisão rastreáveis.
 - Perfil de concorrente com atualização do YTD (%) e histórico.
 - Ranking anual de investidores.
-- Sprints semanais e mensais: janelas, snapshots de referência, ranking por retorno composto do período; ausência/correção de score.
+- Sprints semanais e mensais: janelas, snapshots de referência, ranking por diferença aritmética YTD em pontos percentuais (não retorno composto); ausência/correção de score.
 - Validação e fecho oficial da classificação anual em 31/12/2026.
 
 ### E3 — BetCoins e carteira (P0)
@@ -47,7 +47,7 @@ Ter um jogo utilizável para o Campeonato 2026 (31-12-2026), com um ranking de i
 
 ### E5 — Mercado secundário / saída 3-B (P0)
 - Representar posições como direitos/obrigações transferíveis com colateral associado.
-- V1: revenda integral de posição por preço em BetCoins, validade por mercado e cancelamento. Futuro: revenda parcial.
+- Revenda integral ou parcial em múltiplos indivisíveis de stake/responsabilidade, com preço livre em BetCoins, validade por mercado e cancelamento.
 - Compra atómica transfere titularidade, risco e colateral; preserva contraparte original, ledger e histórico.
 - Não há saída garantida nem preço de plataforma; distinguir posição posta à venda de posição vendida.
 - Não permitir revenda após fecho, posições já comprometidas ou venda dupla; testar concorrência.
@@ -90,6 +90,8 @@ Um marco só está completo com testes de autorização, invariantes económicas
 - O GitHub Pages não contém chaves privilegiadas; RLS é obrigatória.
 
 ## Decisões ainda por validar com o grupo
+
+O inventário das regras confirmadas e das lacunas técnicas está em [docs/CHAMPIONSHIP_RULES_2026.md](docs/CHAMPIONSHIP_RULES_2026.md).
 
 1. Espectadores: qualquer utilizador autenticado pode apostar, incluindo concorrentes? O crédito semanal de 1 000 é apenas para quem **não** concorre, como definido.
 2. Votação: maioria absoluta de todos os concorrentes elegíveis (proposta) ou maioria dos votos emitidos?
