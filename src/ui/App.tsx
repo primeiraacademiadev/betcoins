@@ -10,6 +10,23 @@ type WalletReconciliation = {owner_id:string;nickname:string;actual_available:nu
 type Tab = 'overview'|'markets'|'wallet'|'admissions'|'admin'|'account';
 const title:Record<Tab,string> = {overview:'Campeonato',markets:'Mercados',wallet:'Carteira',admissions:'Admissões',admin:'Gestão',account:'A minha conta'};
 function tradeTerms(side:'back'|'lay',stake:number,odds:number){const liability=Math.round(stake*(odds-1)*100)/100;return {risk:side==='back'?stake:liability,profit:side==='back'?liability:stake,payout:stake+liability};}
+async function getSpectatorRankings(asOf:string|null):Promise<Ranking[]> {
+ try {return await rpc<Ranking[]>('get_spectator_rankings',{p_as_of:asOf});}
+ catch(error) {
+  if(asOf!==null)throw error;
+  // Maintain the published MVP until the incremental Supabase migration is applied.
+  const old=await rpc<Array<{nickname:string;available:number;reserved:number;issued:number}>>('get_rankings');
+  return old.map((r,i)=>({
+   owner_id:'legacy-'+i+'-'+r.nickname,nickname:r.nickname,
+   available:Number(r.available),reserved:Number(r.reserved),issued:Number(r.issued),
+   wealth:Number(r.available)+Number(r.reserved),
+   relative_pct:Number(r.issued)>0?
+    100*(Number(r.available)+Number(r.reserved)-Number(r.issued))/Number(r.issued):null,
+   realized_resale_pnl:0,open_positions:null,exposure:null,
+   valuation_status:'contabilistico_legacy'
+  }));
+ }
+}
 function Coin({amount}:{amount:number}){return <span className="coin-amount"><span className="coin-glyph">฿</span> {formatCoins(amount)}</span>}
 function Button({children,onClick,disabled=false,subtle=false}:{children:ReactNode;onClick:()=>void;disabled?:boolean;subtle?:boolean}){return <button className={subtle?'button secondary':'button'} onClick={onClick} disabled={disabled}>{children}</button>}
 export function App(){
@@ -30,7 +47,7 @@ export function App(){
    const [c,m,o,f,p,l,w,r,a,role] = await Promise.all([
      rpc<Competitor[]>('get_competitors'),selectRows<Market>('markets'),selectRows<Outcome>('outcomes'),
      selectRows<Offer>('offers'),selectRows<Position>('my_positions'),rpc<Listing[]>('get_active_listings'),
-     rpc<Wallet>('get_wallet'),rpc<Ranking[]>('get_spectator_rankings',{p_as_of:rankAsOf}),rpc<Application[]>('get_applications'),rpc<{is_competitor:boolean;is_admin:boolean}>('my_roles')
+     rpc<Wallet>('get_wallet'),getSpectatorRankings(rankAsOf),rpc<Application[]>('get_applications'),rpc<{is_competitor:boolean;is_admin:boolean}>('my_roles')
    ]);
    const ownProfile=(await selectRows<{nickname:string}>('profiles',{column:'id',value:user.id}))[0]||null;setProfile(ownProfile);setNickname(ownProfile?.nickname||'');
    setSprints(await selectRows<Sprint>('sprints'));setLedger(await selectRows<LedgerEntry>('ledger'));setCompetitors(c||[]);setMarkets(m||[]);setOutcomes(o||[]);setOffers(f||[]);setPositions(p||[]);setListings(l||[]);setWallet(w);setRankings(r||[]);setApps(a||[]);setIsCompetitor(role?.is_competitor||false);setIsAdmin(role?.is_admin||false);
@@ -45,9 +62,13 @@ export function App(){
  async function showRankingWindow(windowType:'now'|'week'|'month'){
   if(!user)return;
   const asOf=windowType==='now'?null:new Date(Date.now()-(windowType==='week'?7:30)*86400000).toISOString();
-  setRankWindow(windowType);setRankAsOf(asOf);
-  try{setRankings(await rpc<Ranking[]>('get_spectator_rankings',{p_as_of:asOf}))}
-  catch(e){toast.error((e as Error).message)}
+  try{
+   const rows=await getSpectatorRankings(asOf);
+   setRankings(rows);setRankWindow(windowType);setRankAsOf(asOf);
+   if(asOf===null&&rows.some(r=>r.valuation_status==='contabilistico_legacy')){
+    toast.warning('O ranking histórico e os detalhes económicos estarão disponíveis após a atualização da base de dados.');
+   }
+  }catch(e){toast.warning('Classificação histórica indisponível até à atualização da base de dados.');}
  }
  const proposedStake=Number(stake),proposedOdds=Number(odds);
  const validOffer=Number.isInteger(proposedStake)&&proposedStake>0&&Number.isFinite(proposedOdds)&&proposedOdds>1&&proposedOdds<=1000&&Math.round(proposedOdds*100)===proposedOdds*100;
@@ -73,12 +94,13 @@ export function App(){
       <span className="rank-number">{String(i+1).padStart(2,'0')}</span>
       <div className="rank-name"><strong>{r.nickname}</strong>
        <small className="ranking-detail">Disponível: {formatCoins(Number(r.available))} ฿ · Reservado: {formatCoins(Number(r.reserved))} ฿ · Créditos: {formatCoins(Number(r.issued))} ฿</small>
-       <small className="ranking-detail">P&L realizado em revendas registadas: {formatCoins(Number(r.realized_resale_pnl))} ฿
+       {r.valuation_status!=='contabilistico_legacy'&&<small className="ranking-detail">P&L realizado em revendas registadas: {formatCoins(Number(r.realized_resale_pnl))} ฿
         {r.open_positions!==null&&<> · Posições abertas: {r.open_positions} · Exposição em colateral: {formatCoins(Number(r.exposure||0))} ฿</>}
-       </small>
+       </small>}
       </div>
       <strong className="ranking-value">{rankMode==='wealth'?<Coin amount={Number(r.wealth)}/>:r.relative_pct===null?'—':Number(r.relative_pct).toFixed(2)+'%'}</strong>
     </div>):<Empty text="Sem espectadores para a data selecionada."/>}
+    {rankings.some(r=>r.valuation_status==='contabilistico_legacy')&&<p className="footnote">Ranking contabilístico básico disponível. Histórico, exposição e P&L de revendas aguardam migração da base de dados.</p>}
     <p className="footnote">Avaliação <strong>contabilística, sem cotação de mercado</strong>: património = disponível + reservado; valorização relativa = (património − créditos) / créditos. Posições abertas e exposição representam o estado atual (não são reconstruídas nas datas históricas). O P&L indicado inclui apenas revendas registadas; não representa o lucro total nem antecipa ganhos de apostas em aberto. A ausência de liquidez impede uma avaliação fiável ao preço de mercado.</p></section></div>
     {sprints.length>0&&<section className="panel"><div className="panel-head"><h2>Sprints semanais e mensais</h2></div><div className="market-pills">{sprints.map(sp=><button key={sp.id} className={'market-pill '+(selectedSprint===sp.id?'selected':'')} onClick={()=>setSelectedSprint(sp.id)}>{sp.name} · {sp.state}</button>)}</div>{selectedSprint&&sprintResults.length>0?sprintResults.map((r,i)=><div className="rank-row" key={r.competitor_id}><span className="rank-number">{i+1}.</span><span className="rank-name">{r.nickname}</span><strong className={r.return_pct>=0?'positive':'negative'}>{r.return_pct>0?'+':''}{Number(r.return_pct).toFixed(2)} pp</strong></div>):<p className="footnote">Seleciona um sprint com snapshots inicial e final para consultar a evolução do YTD (pontos percentuais).</p>}</section>}
     {isCompetitor&&<section className="panel"><div className="panel-head"><h2>Atualizar a minha valorização YTD</h2></div><div className="inline-form"><input aria-label="Valorização YTD em percentagem" type="number" step=".01" value={score} onChange={e=>setScore(e.target.value)}/><Button disabled={busy} onClick={()=>void act(()=>rpc('set_my_score',{p_ytd:Number(score)}),'Valorização YTD atualizada.')}>Guardar score</Button></div><p className="footnote">O score é declarado pelo próprio concorrente e fica registado no histórico.</p></section>}
