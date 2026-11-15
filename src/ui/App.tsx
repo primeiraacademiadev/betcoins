@@ -116,7 +116,7 @@ export function App(){
     const qty=Number(listingQuantity[p.id]??p.stake);
     const price=Number(listingPrice[p.id]);
     const validQuantity=Number.isInteger(qty)&&qty>=minimum&&qty<=p.stake&&qty%minimum===0;
-    const validPrice=Number.isFinite(price)&&price>0&&price<=100000000&&Math.round(price*100)===price*100;
+    const validPrice=Number.isFinite(price)&&price>0&&price<=100000000&&Math.abs(Math.round(price*100)-price*100)<1e-7;
     const allocatedBasis=Number(p.cost_basis??(p.side==='back'?p.stake:p.liability))*qty/p.stake;
     return <div className="position" key={p.id}>
       <div><strong>{outcomes.find(o=>o.id===p.outcome_id)?.label||'Previsão'} · {p.side.toUpperCase()}</strong>
