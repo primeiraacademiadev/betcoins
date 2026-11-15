@@ -53,3 +53,11 @@ jobs:
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/baselines/20261115_full_install.sql
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150004_position_settlement_pnl.sql
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
+      - name: Existing database upgrade 03 through 08 in one transaction
+        run: |
+          createdb betcoins_upgrade
+          sed '/^create role anon /d; /^create role authenticated /d' tests/db/bootstrap.sql | PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120001_init.sql
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120002_sprints.sql
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/deploy/20261115_manual_upgrade_03_to_08.sql
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
