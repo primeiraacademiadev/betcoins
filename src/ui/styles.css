@@ -4,7 +4,7 @@
 .inline-form{display:flex;gap:12px;max-width:450px}.inline-form input{margin:0;flex:1}.inline-form button{white-space:nowrap}.offer select{max-width:230px}
 
 /* Viewport-level feedback stays visible when the main content scrolls. */
-.toast-region{position:fixed;top:88px;right:20px;width:min(440px,calc(100vw - 40px));z-index:1000;display:grid;gap:8px;pointer-events:none}
+.toast-region{position:fixed;top:16px;right:20px;width:min(440px,calc(100vw - 40px));z-index:1000;display:grid;gap:8px;pointer-events:none;max-height:calc(100dvh - 32px);overflow-y:auto}
 .toast-region .toast{margin:0;box-shadow:0 14px 38px #0008;pointer-events:auto;align-items:center;overflow-wrap:anywhere}
 .toast-region .toast button{margin-left:auto;cursor:pointer;font-size:20px}
 .account-link{border:0;background:transparent;color:#c0cee0;display:inline-flex;align-items:center;gap:9px;cursor:pointer;border-radius:8px;padding:5px}
@@ -16,3 +16,13 @@
 .trade-preview{background:#1b2d36;border:1px solid #355b58;color:#c1dacf;padding:12px 14px;border-radius:8px;line-height:1.6;font-size:12px}
 .trade-preview strong{color:#f0ce87}
 .field-error{color:#f5aa92;font-size:12px;line-height:1.5}
+
+.toast-region .toast{margin:0;min-width:0;justify-content:space-between;line-height:1.5}
+.toast-region .toast-message{flex:1;min-width:0}
+.toast-region .toast.warning{background:#332b20;border-color:#a27a3d;color:#f7d89d}
+.toast-region .toast.success{background:#1b352d;border-color:#468b6b;color:#92dfb5}
+.toast-region .toast.error{background:#3b252d;border-color:#a85454;color:#ffa9a9}
+.toast-region .toast button{min-width:34px;min-height:34px;flex-shrink:0;font-size:22px;border-radius:6px}
+.toast-region .toast button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+@media(max-width:760px){.toast-region{top:12px;right:12px;width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}}
+@media(prefers-reduced-motion:reduce){.toast-region .toast{animation:none!important;transition:none!important}}
