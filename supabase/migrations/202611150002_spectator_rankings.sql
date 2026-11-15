@@ -59,7 +59,7 @@ begin
     select 1 from public.competitors c
     where c.id=w.owner_id and (p_as_of is null or c.joined_at<=p_as_of)
    )
- order by wealth desc,p.nickname,w.owner_id;
+ order by 6 desc,p.nickname,w.owner_id;
 end $$;
 revoke all on function public.get_spectator_rankings(timestamptz) from public,anon,authenticated;
 grant execute on function public.get_spectator_rankings(timestamptz) to authenticated;
