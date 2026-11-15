@@ -21,7 +21,7 @@ select public.update_nickname('Investidor A');
 select public.set_my_score(12.5);
 select public.create_market('Vencedor teste','annual','winner',now()+interval '10 min',
  array['11111111-1111-4111-8111-111111111111'::uuid,'22222222-2222-4222-8222-222222222222'::uuid]);
--- Sprint snapshots: calculate period return from boundary YTDs.
+-- Sprint snapshots: calculate arithmetic YTD difference in percentage points.
 select public.create_sprint('Semana de teste','weekly',now()-interval '1 hour',now()+interval '1 hour');
 select public.capture_sprint((select id from public.sprints limit 1),'start');
 select public.set_my_score(24);
@@ -33,7 +33,7 @@ select public.capture_sprint((select id from public.sprints limit 1),'end');
 do $$declare v_result numeric;begin
  select return_pct into v_result from public.get_sprint_rankings((select id from public.sprints limit 1))
  where competitor_id='11111111-1111-4111-8111-111111111111';
- if abs(v_result-10.2222)>0.001 then raise exception 'Retorno sprint incorrecto: %',v_result;end if;
+ if abs(v_result-11.5)>0.001 then raise exception 'Retorno sprint incorrecto: %',v_result;end if;
 end $$;
 -- A spectator can only receive weekly grants once.
 select public.grant_weekly();
@@ -64,13 +64,13 @@ select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111'
 select public.buy_position((select id from public.listings limit 1));
 -- Cost basis must pass to the new owner at the actual secondary-market purchase price.
 reset role;
-do $declare v_basis numeric;v_pnl numeric;begin
+do $$declare v_basis numeric;v_pnl numeric;begin
  select cost_basis into v_basis from public.positions where side='back' limit 1;
  select realized_pnl into v_pnl from public.position_sales limit 1;
  if v_basis<>5 then raise exception 'Buyer cost basis invalid: %',v_basis;end if;
  if v_pnl<>-5 then raise exception 'Seller realized P&L invalid: %',v_pnl;end if;
  if (select count(*) from public.position_sales)<>1 then raise exception 'Sale history missing';end if;
-end $;
+end $$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 

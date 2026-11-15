@@ -14,8 +14,8 @@ export type Wallet = { available: number; reserved: number; total_issued: number
 export type Ranking = { nickname: string; available: number; reserved: number; issued: number };
 export type Application = { id: string; candidate_id: string; nickname: string; state: string; yes_votes: number; eligible_votes: number };
 export function sprintReturn(start: number, end: number): number {
-  if (start <= -100) throw new Error('O YTD inicial não pode ser inferior ou igual a -100%.');
-  return ((1 + end / 100) / (1 + start / 100) - 1) * 100;
+  if (!Number.isFinite(start) || !Number.isFinite(end)) throw new Error('YTD inválido.');
+  return end - start;
 }
 export function impliedProbability(odds: number): number { if (odds <= 1) throw new Error('Odd inválida'); return 100 / odds; }
 export function liability(stake: number, odds: number): number {
@@ -23,7 +23,6 @@ export function liability(stake: number, odds: number): number {
   return Math.round(stake * (odds - 1) * 100) / 100;
 }
 export function formatCoins(value: number) { return new Intl.NumberFormat('pt-PT', {maximumFractionDigits:2}).format(value); }
-
 /** Economic P&L on a completed secondary sale, independent of collateral transfers. */
 export function resalePnl(salePrice: number, acquisitionCost: number): number {
  if (!Number.isFinite(salePrice) || salePrice <= 0 || !Number.isFinite(acquisitionCost) || acquisitionCost < 0) throw new Error('Preço ou custo de aquisição inválido.');
