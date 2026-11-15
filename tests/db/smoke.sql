@@ -271,3 +271,23 @@ do $$declare t numeric;issued numeric;begin
   raise exception 'Split trades not settled';
  end if;
 end $$;
+
+-- Final results must reconcile against the last holder's actual purchase basis.
+reset role;
+do $$declare v_pnl numeric; v_payoff numeric;begin
+ select ps.realized_pnl,ps.payoff into v_pnl,v_payoff
+ from public.position_settlements ps
+ join public.positions p on p.id=ps.position_id
+ join public.markets m on m.id=p.market_id
+ where m.title='Revenda parcial teste' and p.side='back'
+ and p.stake=3;
+ if v_payoff<>12 or v_pnl<>8 then
+  raise exception 'Final buyer BACK result incorrect: % / %',v_payoff,v_pnl;
+ end if;
+ if (select count(*) from public.position_settlements ps
+   join public.positions p on p.id=ps.position_id
+   join public.markets m on m.id=p.market_id
+   where m.title='Revenda parcial teste')<>4 then
+   raise exception 'Missing split settlements';
+ end if;
+end $$;
