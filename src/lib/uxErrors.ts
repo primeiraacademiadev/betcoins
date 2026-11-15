@@ -37,6 +37,7 @@ export function classifyError(error:unknown):UXError {
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
  if(code==='23505')return errorFor('DUPLICATE_ACTION');
+ if(code==='23514'&&(/wallets.*check|balance|saldo/i.test(text)))return errorFor('BALANCE_INSUFFICIENT');
  if(code==='23514')return errorFor('INVALID_SELECTION');
  if(code==='42501'||text.includes('sem permissão')||text.includes('permission denied')||text.includes('não permitido'))return errorFor('NOT_AUTHORIZED');
  if(code==='PGRST301'||text.includes('não autenticado')||text.includes('jwt expired'))return errorFor('SESSION_REQUIRED');
