@@ -95,6 +95,48 @@ do $$declare v_supply numeric;v_issued numeric;begin
  if (select count(*) from public.trades where settled_at is not null)<>1 then raise exception 'Trade por liquidar';end if;
  if (select state from public.markets limit 1)<>'settled' then raise exception 'Mercado não liquidado';end if;
 end $$;
+-- Recover missed spectator weeks, without retroactive grants before signup.
+reset role;
+update public.profiles
+ set created_at=now()-interval '15 days'
+ where id='33333333-3333-4333-8333-333333333333';
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+do $declare v_before integer; v_after integer; v_expected integer;begin
+ select count(*) into v_before from public.weekly_grants
+  where owner_id='33333333-3333-4333-8333-333333333333';
+ perform public.grant_weekly();
+ select count(*) into v_after from public.weekly_grants
+  where owner_id='33333333-3333-4333-8333-333333333333';
+ select count(*) into v_expected from generate_series(
+  date_trunc('week',(now()-interval '15 days') at time zone 'UTC'),
+  date_trunc('week',now() at time zone 'UTC'),interval '7 days'
+ ) g;
+ if v_after<>v_expected or v_after<=v_before then
+  raise exception 'Recuperação semanal incorreta: % / % / %',v_before,v_after,v_expected;
+ end if;
+ if public.grant_weekly()<>0 then raise exception 'Recarga não idempotente'; end if;
+end $;
+do $begin
+ if exists(select 1 from public.reconcile_wallets() r where not r.balanced) then
+  raise exception 'Reconciliação falhou depois das recargas e da liquidação';
+ end if;
+end $;
+-- Reconciliation must be able to report a discrepancy, without repairing balances.
+reset role;
+begin;
+update public.wallets set available=available+1
+ where owner_id='33333333-3333-4333-8333-333333333333';
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+do $begin
+ if not exists(select 1 from public.reconcile_wallets() r
+  where r.owner_id='33333333-3333-4333-8333-333333333333'
+   and not r.balanced and r.available_difference=1) then
+  raise exception 'Reconciliação não detetou divergência';
+ end if;
+end $;
+rollback;
 -- Permission check: authenticated role must not write wallets directly.
 set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
