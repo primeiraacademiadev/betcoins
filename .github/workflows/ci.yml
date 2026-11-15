@@ -45,6 +45,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150003_partial_resale.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150004_position_settlement_pnl.sql
           psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150005_competition_validation.sql
+          psql -v ON_ERROR_STOP=1 -f tests/db/competition.sql
       - name: Clean-install baseline and economic parity smoke test
         run: |
           createdb betcoins_baseline
@@ -53,6 +55,8 @@ jobs:
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/baselines/20261115_full_install.sql
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150004_position_settlement_pnl.sql
           PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
+          PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150005_competition_validation.sql
+          PGDATABASE=betcoins_baseline psql -v ON_ERROR_STOP=1 -f tests/db/competition.sql
       - name: Existing database upgrade 03 through 08 in one transaction
         run: |
           createdb betcoins_upgrade
@@ -61,3 +65,7 @@ jobs:
           PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611120002_sprints.sql
           PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/deploy/20261115_manual_upgrade_03_to_08.sql
           PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f tests/db/smoke.sql
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611150005_competition_validation.sql
+          PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f tests/db/competition.sql
+      - name: Concurrent admissions, captures, validation and cutoff timestamps
+        run: python3 tests/db/competition_concurrency.py
