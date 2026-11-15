@@ -11,7 +11,7 @@ export type Position = { id: string; trade_id: string; owner_id: string; side: O
 export type Listing = { id: string; position_id: string; seller_id: string; price: number; state: string; created_at: string; side:'back'|'lay';market_id:string;outcome_id:string;stake:number;liability:number;outcome_label:string;market_title:string };
 export type LedgerEntry = { id:number;reason:string;reference:string;available_delta:number;reserved_delta:number;created_at:string };
 export type Wallet = { available: number; reserved: number; total_issued: number };
-export type Ranking = { nickname: string; available: number; reserved: number; issued: number };
+export type Ranking = { owner_id: string; nickname: string; available: number; reserved: number; issued: number; wealth: number; relative_pct: number|null; realized_resale_pnl: number; open_positions: number|null; exposure: number|null; valuation_status: string };
 export type Application = { id: string; candidate_id: string; nickname: string; state: string; yes_votes: number; eligible_votes: number };
 export function sprintReturn(start: number, end: number): number {
   if (!Number.isFinite(start) || !Number.isFinite(end)) throw new Error('YTD inválido.');

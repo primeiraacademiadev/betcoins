@@ -147,3 +147,26 @@ do $$begin
  exception when insufficient_privilege then null;
  end;
 end $$;
+
+-- Rank as-of must be reproducible from immutable ledger entries, with no invented mark-to-market.
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+do $$declare r record;begin
+ select * into r from public.get_spectator_rankings(null)
+ where owner_id='33333333-3333-4333-8333-333333333333';
+ if not found or r.issued<=0 or r.wealth<>r.available+r.reserved
+  or r.valuation_status<>'contabilistico_sem_cotacao'
+  or r.open_positions<>0 then
+  raise exception 'Classificação atual incorreta';
+ end if;
+ if r.relative_pct<>round(100*(r.wealth-r.issued)/r.issued,2) then
+  raise exception 'Rentabilidade relativa inconsistente';
+ end if;
+ if exists(select 1 from public.get_spectator_rankings(
+   (select created_at-interval '1 second' from public.profiles
+    where id='33333333-3333-4333-8333-333333333333')
+  ) where owner_id='33333333-3333-4333-8333-333333333333') then
+  raise exception 'Histórico inclui utilizador antes da inscrição';
+ end if;
+end $$;
