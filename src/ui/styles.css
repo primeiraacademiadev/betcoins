@@ -26,3 +26,17 @@
 .toast-region .toast button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 @media(max-width:760px){.toast-region{top:12px;right:12px;width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}}
 @media(prefers-reduced-motion:reduce){.toast-region .toast{animation:none!important;transition:none!important}}
+
+/* #13: accessible, responsive P2P explanation for the chosen acceptance quantity. */
+.offer-explained{align-items:flex-start;flex-wrap:wrap}
+.offer-explained .offer-details{min-width:0;flex:1 1 250px}
+.offer-explained .trade-preview{display:grid;gap:5px;margin-top:10px}
+.offer-explained .position-sale{align-self:center}
+.offer-explained .position-sale input{min-width:78px;width:88px}
+input[aria-invalid="true"],select[aria-invalid="true"]{border-color:#e4a18d}
+label .field-error{display:block;margin-top:6px;font-weight:400}
+@media(max-width:760px){
+ .offer-explained .position-sale{width:100%;align-items:stretch}
+ .offer-explained .position-sale input{flex:1;min-width:0}
+ .offer-explained .position-sale button{white-space:nowrap}
+}

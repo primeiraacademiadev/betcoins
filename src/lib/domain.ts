@@ -24,6 +24,14 @@ export function liability(stake: number, odds: number): number {
   if (!Number.isInteger(stake) || stake <= 0 || !Number.isFinite(odds) || odds <= 1) throw new Error('Oferta inválida');
   return Math.round(stake * (odds - 1) * 100) / 100;
 }
+/** Conditions and collateral from the ACCEPTING player's perspective. */
+export function acceptanceTerms(offeredSide: OrderSide, stake: number, odds: number) {
+ const liabilityValue=liability(stake,odds);
+ const side:OrderSide=offeredSide==='back'?'lay':'back';
+ const risk=side==='back'?stake:liabilityValue;
+ const profit=side==='back'?liabilityValue:stake;
+ return {side,risk,profit,payout:stake+liabilityValue};
+}
 export function formatCoins(value: number) { return new Intl.NumberFormat('pt-PT', {maximumFractionDigits:2}).format(value); }
 /** Economic P&L on a completed secondary sale, independent of collateral transfers. */
 export function resalePnl(salePrice: number, acquisitionCost: number): number {
