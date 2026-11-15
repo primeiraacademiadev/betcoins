@@ -4,7 +4,7 @@ import type { User } from '@supabase/supabase-js';
 import { client, configured, rpc, selectRows } from '../lib/supabase';
 import { useToast } from './ToastProvider';
 import { classifyError, errorFor, errorText, validateOdd, validateStake, validatePrice, validateYtd, validateDateRange } from '../lib/uxErrors';
-import { formatCoins, positionPayoff, resaleLotStep, type PositionSale, type PositionSettlement, type Application, type Competitor, type LedgerEntry, type Listing, type Market, type Offer, type Outcome, type Position, type Ranking, type Wallet } from '../lib/domain';
+import { acceptanceTerms, formatCoins, positionPayoff, resaleLotStep, type PositionSale, type PositionSettlement, type Application, type Competitor, type LedgerEntry, type Listing, type Market, type Offer, type Outcome, type Position, type Ranking, type Wallet } from '../lib/domain';
 type Sprint = {id:string;name:string;kind:string;starts_at:string;ends_at:string;state:string};
 type SprintResult = {competitor_id:string;nickname:string;start_ytd:number;end_ytd:number;return_pct:number};
 type WalletReconciliation = {owner_id:string;nickname:string;actual_available:number;ledger_available:number;available_difference:number;actual_reserved:number;ledger_reserved:number;reserved_difference:number;actual_issued:number;ledger_issued:number;issued_difference:number;balanced:boolean};
@@ -124,7 +124,7 @@ export function App(){
     {!current?<Empty text="Os mercados serão publicados pelos gestores do campeonato."/>:<><div className="market-summary"><div><span className="eyebrow">{current.kind.toUpperCase()} / {current.category.toUpperCase()}</span><h2>{current.title}</h2><p>Fecha: {new Date(current.closes_at).toLocaleString('pt-PT')} · {current.state}</p></div><span className="badge">{current.state}</span></div><div className="two-columns"><section className="panel"><div className="panel-head"><h2>Livro de ofertas</h2></div>{marketOffers.length?marketOffers.map(o=>{
       const n=Number(acceptAmounts[o.id]??o.stake_remaining);
       const takerSide=o.side==='back'?'lay':'back';
-      const terms=Number.isInteger(n)&&n>0?tradeTerms(takerSide,n,Number(o.odds)):null;
+      const terms=Number.isInteger(n)&&n>0?acceptanceTerms(o.side,n,Number(o.odds)):null;
       const validQuantity=terms!==null&&n<=Number(o.stake_remaining);
       const enough=wallet!==null&&terms!==null&&Number(wallet.available)>=terms.risk;
       const predicted=marketOutcomes.find(c=>c.id===o.outcome_id)?.label||'o resultado indicado';
