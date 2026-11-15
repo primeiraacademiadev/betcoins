@@ -7,7 +7,7 @@ export type Competitor = { id: string; nickname: string; ytd: number; updated_at
 export type Market = { id: string; title: string; kind: MarketKind; category: MarketCategory; closes_at: string; state: string; winner_outcome_id?: string | null };
 export type Outcome = { id: string; market_id: string; label: string; competitor_id: string };
 export type Offer = { id: string; market_id: string; outcome_id: string; owner_id: string; side: OrderSide; odds: number; stake_remaining: number; created_at: string };
-export type Position = { id: string; trade_id: string; owner_id: string; side: OrderSide; outcome_id: string; market_id: string; stake: number; liability: number; status: string };
+export type Position = { id: string; trade_id: string; owner_id: string; side: OrderSide; outcome_id: string; market_id: string; stake: number; liability: number; cost_basis?: number; status: string };
 export type Listing = { id: string; position_id: string; seller_id: string; price: number; state: string; created_at: string; side:'back'|'lay';market_id:string;outcome_id:string;stake:number;liability:number;outcome_label:string;market_title:string };
 export type LedgerEntry = { id:number;reason:string;reference:string;available_delta:number;reserved_delta:number;created_at:string };
 export type Wallet = { available: number; reserved: number; total_issued: number };
@@ -23,3 +23,8 @@ export function liability(stake: number, odds: number): number {
   return Math.round(stake * (odds - 1) * 100) / 100;
 }
 export function formatCoins(value: number) { return new Intl.NumberFormat('pt-PT', {maximumFractionDigits:2}).format(value); }
+/** Economic P&L on a completed secondary sale, independent of collateral transfers. */
+export function resalePnl(salePrice: number, acquisitionCost: number): number {
+ if (!Number.isFinite(salePrice) || salePrice <= 0 || !Number.isFinite(acquisitionCost) || acquisitionCost < 0) throw new Error('Preço ou custo de aquisição inválido.');
+ return Math.round((salePrice-acquisitionCost)*100)/100;
+}

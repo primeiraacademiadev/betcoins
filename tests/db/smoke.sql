@@ -62,6 +62,18 @@ select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222'
 select public.list_position((select id from public.positions where side='back' limit 1),5);
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 select public.buy_position((select id from public.listings limit 1));
+-- Cost basis must pass to the new owner at the actual secondary-market purchase price.
+reset role;
+do $$declare v_basis numeric;v_pnl numeric;begin
+ select cost_basis into v_basis from public.positions where side='back' limit 1;
+ select realized_pnl into v_pnl from public.position_sales limit 1;
+ if v_basis<>5 then raise exception 'Buyer cost basis invalid: %',v_basis;end if;
+ if v_pnl<>-5 then raise exception 'Seller realized P&L invalid: %',v_pnl;end if;
+ if (select count(*) from public.position_sales)<>1 then raise exception 'Sale history missing';end if;
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+
 reset role;
 do $$declare v_supply numeric;v_issued numeric;begin
  select sum(available+reserved),sum(total_issued) into v_supply,v_issued from public.wallets;
