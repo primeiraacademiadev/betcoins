@@ -207,8 +207,7 @@ do $$declare x record;begin
 end $$;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 select public.buy_position(
- (select l.id from public.listings l join public.positions p on p.id=l.position_id
-  join public.markets m on m.id=p.market_id where m.title='Revenda parcial teste'));
+ (select id from public.get_active_listings() where market_title='Revenda parcial teste'));
 -- Check exact remaining slice, buyer ownership, seller P&L, both sides and conserved supply.
 reset role;
 do $$declare t numeric;issued numeric;begin
@@ -244,9 +243,9 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 do $$begin
  begin
-  perform public.buy_position((select l.id from public.listings l
-   join public.positions p on p.id=l.position_id
-   join public.markets m on m.id=p.market_id where m.title='Revenda parcial teste'));
+  perform public.buy_position((select ps.listing_id from public.position_sales ps
+   where ps.buyer_id='11111111-1111-4111-8111-111111111111'
+    and ps.sale_price=4));
   raise exception 'DOUBLE_PURCHASE_SUCCEEDED';
  exception when others then
   if sqlerrm='DOUBLE_PURCHASE_SUCCEEDED' then raise; end if;
