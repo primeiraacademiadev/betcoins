@@ -53,3 +53,10 @@ label .field-error{display:block;margin-top:6px;font-weight:400}
 .auth-close{border:0;background:transparent;color:#becbdb;text-decoration:underline;padding:8px}
 .auth-options :focus-visible,.auth-entry:focus-visible{outline:2px solid #edbd65;outline-offset:3px}
 @media(max-width:760px){.auth-options{margin:10px 12px 0;padding:16px}.auth-providers{width:100%;flex-direction:column;align-items:stretch}.auth-providers .button,.auth-providers .auth-close{width:100%;text-align:center}.auth-entry{white-space:normal}}
+/* Audited competition review: readable provenance and controls on small screens. */
+.competition-actions{display:grid;gap:1rem;margin-top:1rem}
+.competition-actions textarea{display:block;width:100%;min-height:5rem;box-sizing:border-box}
+.competition-ack{display:flex;align-items:flex-start;gap:.6rem}
+.competition-ack input{width:auto;flex:0 0 auto}
+.competition-row .rank-name{min-width:0;overflow-wrap:anywhere}
+@media(max-width:600px){.competition-row{flex-wrap:wrap}.competition-row .rank-name{flex:1 1 60%}}
