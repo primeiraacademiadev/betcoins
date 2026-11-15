@@ -13,12 +13,12 @@
 
 1. Criar projeto Supabase Free.
 2. **Instalação nova e vazia:** escolher exatamente um dos seguintes caminhos:
-   - Método recomendado para projetos geridos por Supabase CLI: aplicar por ordem os sete ficheiros de `supabase/migrations/`, conservando o histórico de migrações.
-   - Método de instalação SQL manual: executar **apenas** `supabase/baselines/20261115_full_install.sql`, que contém os mesmos sete ficheiros, sequencialmente. Registar que foi utilizada a baseline e não executar depois os sete ficheiros outra vez.
-3. **Projeto existente:** nunca executar a baseline. Antes de qualquer alteração, consultar `supabase_migrations.schema_migrations` (ou o histórico oficial do projeto); comparar as versões efetivamente aplicadas com os sete nomes em `supabase/migrations/`, fazer backup e aplicar **apenas as versões em falta**, pela ordem original. Não deduzir o estado remoto a partir do CI ou de GitHub Pages.
+   - Método recomendado para projetos geridos por Supabase CLI: aplicar por ordem os nove ficheiros de `supabase/migrations/`, conservando o histórico de migrações.
+   - Método de instalação SQL manual: executar `supabase/baselines/20261115_full_install.sql` (01–07), depois `202611150004_position_settlement_pnl.sql` (08) e `202611150005_competition_validation.sql` (09). Registar a baseline; não reaplicar as migrações 01–07.
+3. **Projeto existente:** nunca executar a baseline. Antes de qualquer alteração, consultar `supabase_migrations.schema_migrations` (ou o histórico oficial do projeto); comparar as versões efetivamente aplicadas com os nomes em `supabase/migrations/`, fazer backup e aplicar **apenas as versões em falta**, pela ordem original. Não deduzir o estado remoto a partir do CI ou de GitHub Pages. A migração 09 está preparada, mas **não foi aplicada ao Supabase remoto** nesta entrega; ver [operação E2](docs/COMPETITION_OPERATIONS.md).
 4. **Atualizações futuras:** criar novas migrações aditivas; manter os sete ficheiros originais e a baseline de 2026-11-15 imutáveis. Uma nova baseline deverá ter data/versão própria e ser verificada num PostgreSQL descartável.
-3. Criar uma conta de teste com social login.
-4. No SQL Editor, **como administrador da BD**, atribuir o primeiro administrador e concorrente usando o UUID da conta de teste:
+5. Criar uma conta de teste com social login.
+6. No SQL Editor, **como administrador da BD**, atribuir o primeiro administrador e concorrente usando o UUID da conta de teste:
 
 ```sql
 insert into public.admins(id) values ('UUID-DA-CONTA-AQUI');
@@ -68,9 +68,9 @@ A função `grant_weekly()` distribui 1 000 BetCoins aos espectadores elegíveis
 ## 6. Procedimento de fecho
 
 - Os concorrentes atualizam os YTD (declaração manual).
-- O gestor recolhe snapshots dos sprints de início/fim; sem ambos não existe ranking do sprint.
-- O gestor valida a classificação final e escolhe o outcome vencedor.
-- O botão Liquidar fecha o mercado, cancela ofertas pendentes, paga os trades e impede alterações posteriores.
+- Com a migração 09, o gestor captura as declarações históricas até aos limites inicial/final; sem ambos não existe delta classificável do sprint. Ausências ficam explicitamente sem classificação.
+- O gestor revê datas, valores, empates e ausências e regista uma validação final imutável, com nota, autor e data. O anual usa o YTD de fecho. Ver [procedimento completo](docs/COMPETITION_OPERATIONS.md).
+- Esta validação não seleciona outcomes nem liquida apostas. A associação de resultados validados aos mercados é trabalho da #5/#11. Não usar a liquidação binária existente para empates/zero ou para as modalidades ainda não suportadas da #1.
 - Não há retificação automática de mercados liquidados na V1. Corrigir antes do settlement.
 
 ## 7. Checklist de aceitação pré-lançamento

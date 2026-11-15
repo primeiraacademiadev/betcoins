@@ -53,6 +53,22 @@ select pg_temp.check_true((select state='rejected' and decided_at is not null fr
 select pg_temp.check_true(not exists(select 1 from public.competitors where id='a0000000-0000-4000-8000-000000000005'),'rejection does not admit');
 select pg_temp.reject($q$select public.vote_application((select id from public.applications where candidate_id='a0000000-0000-4000-8000-000000000005'),true)$q$,'P0001');
 select set_config('request.jwt.claim.sub','a0000000-0000-4000-8000-000000000002',true);
+-- Even electorate: half the yes votes is not approval; half the no votes rejects.
+select set_config('request.jwt.claim.sub','a0000000-0000-4000-8000-000000000006',true);
+select public.apply_competitor();
+do $$declare v record;v_app uuid;v_n integer;begin
+ select id,eligible_votes into v_app,v_n from public.applications where candidate_id='a0000000-0000-4000-8000-000000000006';
+ perform pg_temp.check_true(v_n%2=0,'even electorate fixture');
+ for v in select id,row_number() over(order by id) n from public.competitors loop
+  perform set_config('request.jwt.claim.sub',v.id::text,true);
+  perform public.vote_application(v_app,v.n<=v_n/2);
+  if v.n=v_n/2 then
+   perform pg_temp.check_true((select state='pending' from public.applications where id=v_app),'exactly half yes is not majority');
+  end if;
+ end loop;
+ perform pg_temp.check_true((select state='rejected' from public.applications where id=v_app),'exactly half no makes majority impossible');
+end $$;
+select set_config('request.jwt.claim.sub','a0000000-0000-4000-8000-000000000002',true);
 select public.set_my_score(0);
 select pg_temp.check_true((select ytd=0 and updated_at is not null from public.competitors where id='a0000000-0000-4000-8000-000000000002'),'declared zero distinguished from missing');
 select pg_temp.check_true(exists(select 1 from public.score_history where competitor_id='a0000000-0000-4000-8000-000000000002' and ytd=0),'declaration audit');

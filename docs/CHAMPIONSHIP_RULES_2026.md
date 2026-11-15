@@ -66,3 +66,9 @@
 3. Validar com os jogadores as regras ainda pendentes e atualizar a UI/termos do campeonato quando forem acordadas.
 
 **Este documento fecha o trabalho de inventariar e fixar as regras conhecidas da E0, mas não representa aprovação das decisões identificadas como pendentes nem implementação das lacunas técnicas.**
+
+## 7. Estado técnico E2 — sem alterar as decisões E0
+
+A migração 09 acrescenta apuramento auditado e validação administrativa persistida para anual/sprints: origem temporal das declarações, ausências explícitas sem classificação, empates partilhados e resultados imutáveis. Não foi aplicada ao Supabase remoto nesta entrega. Ver [matriz de aceitação da #3](ISSUE_3_ACCEPTANCE.md) e [operação](COMPETITION_OPERATIONS.md).
+
+Capturar a última declaração auditada até ao limite não aprova penalizações, declarações tardias ou regras novas de apostas. O delta do sprint continua a usar start/end do próprio sprint; as duas modalidades de mercado e o empate/zero mantêm-se **sem suporte financeiro**. Validar a classificação não chama settlement.

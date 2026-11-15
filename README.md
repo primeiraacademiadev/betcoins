@@ -44,4 +44,6 @@ Aplicação web pública em **GitHub Pages** (React, TypeScript, Vite), autentic
 
 **Estado: MVP integrado na `main`, publicado em GitHub Pages e ligado ao Supabase; existem regras de produto por implementar.** O [backlog](BACKLOG.md), as [regras do Campeonato 2026](docs/CHAMPIONSHIP_RULES_2026.md) e as [issues](https://github.com/primeiraacademiadev/betcoins/issues) distinguem o que está aprovado, implementado e pendente. Comentários e sugestões são bem-vindos através das [issues](https://github.com/primeiraacademiadev/betcoins/issues).
 
+O apuramento auditado e a validação final E2 estão preparados na **migração 09, ainda não aplicada ao Supabase remoto nesta entrega**. Até à instalação, a interface mantém consulta dos dados antigos e indica a indisponibilidade dos novos controlos. [Critérios e testes](docs/ISSUE_3_ACCEPTANCE.md) · [Instalação e operação](docs/COMPETITION_OPERATIONS.md).
+
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.

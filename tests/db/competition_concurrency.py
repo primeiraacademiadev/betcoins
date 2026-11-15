@@ -86,7 +86,7 @@ assert sql(f"select count(*) from public.competition_validations where sprint_id
 
 # Start a score transaction BEFORE a boundary, keep it waiting until AFTER it.
 late_sprint = 'd0000000-0000-4000-8000-000000000004'
-sql(f"insert into public.sprints(id,championship_id,name,kind,starts_at,ends_at) values('{late_sprint}','{champ}','Boundary race E2','monthly',clock_timestamp()-interval '1 hour',clock_timestamp()+interval '2 seconds')")
+sql(f"insert into public.sprints(id,championship_id,name,kind,starts_at,ends_at) values('{late_sprint}','{champ}','Boundary race E2','monthly',clock_timestamp()-interval '1 hour',clock_timestamp()+interval '5 seconds')")
 sql(as_user(admin, f"select public.capture_sprint('{late_sprint}','start');"))
 holder = subprocess.Popen(['psql', '-X', '-At', '-v', 'ON_ERROR_STOP=1'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 try:
@@ -101,6 +101,7 @@ try:
             if time.monotonic()>deadline:
                 raise AssertionError('Score did not wait')
             time.sleep(.05)
+        assert sql(f"select xact_start<(select ends_at from public.sprints where id='{late_sprint}') from pg_stat_activity where application_name='e2-late-score'").stdout.strip() == 't'
         holder.stdin.write(f"select pg_sleep(greatest(0,extract(epoch from (select ends_at from public.sprints where id='{late_sprint}')-clock_timestamp())+.1)); commit;\n\\q\n")
         holder.stdin.flush()
         future.result(timeout=20)
