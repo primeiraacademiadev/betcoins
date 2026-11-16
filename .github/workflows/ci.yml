@@ -77,3 +77,12 @@ jobs:
           done
       - name: Concurrent matching, spending, resale, settlement and cutoff
         run: python3 tests/db/markets_concurrency.py
+      - name: Explicit snapshot modes on all installation paths and legacy regression
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611160002_snapshot_market_modes.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/markets.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_modes.sql
+          done
+      - name: Concurrent mode validation, settlement and blocked financial ties
+        run: python3 tests/db/market_modes_concurrency.py

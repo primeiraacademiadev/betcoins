@@ -22,7 +22,7 @@
 - A diferença não deve ser confundida com a rentabilidade composta entre valores YTD nem com a stake/odd da aposta.
 - A modalidade escolhida é atributo do mercado, visível ao utilizador; o motor não deve adivinhar a modalidade.
 - **Exemplo:** snapshot anterior 12,00% e snapshot do fecho atual 16,50%. No mercado «valor do snapshot», a referência é **16,50%**; no mercado «diferença entre snapshots», a referência é **+4,50 p.p.** Estes são resultados diferentes, não duas maneiras de apresentar o mesmo mercado.
-- **Implementação atual:** os sprints calculam ΔYTD por `round(b.ytd-a.ytd,4)`, a partir dos snapshots `start` e `end` **do próprio sprint**. A distinção entre *snapshot do período anterior* e *snapshot de início do sprint* e a modalidade «valor absoluto do snapshot» carecem de extensão explícita do modelo de mercados (não estão implementadas).
+- **Implementação preparada na migração 11:** mercados com modalidade explícita `snapshot_value` ou `snapshot_delta_previous`, fontes de fecho identificadas e classificação validada própria. O delta start/end do próprio sprint permanece apenas nos mercados/classificações legados. A migração 11 não foi aplicada ao Supabase remoto; ver [modalidades e operação](SNAPSHOT_MARKET_MODES.md).
 - **A validar com o grupo:** horário semanal de referência e fuso horário, ausência de atualização, último valor válido e eventual penalização de **1 p.p.** (foi proposta, ainda não está automatizada); inscrições a meio do período, correções/tardios, retiradas.
 
 ## 3. Outcomes, mercados P2P e empate
@@ -50,7 +50,7 @@
 | --- | --- | --- |
 | Login versus candidatura | Jornadas separadas | Implementado |
 | Votação por maioria absoluta | Eleitorado congelado | Implementado |
-| Duas modalidades: snapshot absoluto e Δ do anterior | Aprovadas como regra de produto | **Por implementar** no modelo/geração/liquidação de mercados |
+| Duas modalidades: snapshot absoluto e Δ do anterior | Aprovadas como regra de produto | Implementadas no código/migração 11, com validação e liquidação regular; instalação remota pendente. Geração recorrente continua na #11 |
 | ΔYTD aritmético do sprint | Diferença de snapshots em p.p. | Implementado para start/end do mesmo sprint |
 | Empate como zero na roleta | Ambas as apostas preto/vermelho perdem | **Por implementar**: conservação e destinatário das perdas |
 | Revenda parcial por lotes | Proporções e cêntimos exatos | Implementado |
@@ -61,7 +61,7 @@
 
 ## 6. Critérios para próximos tickets
 
-1. Novo tipo explícito de mercado com `snapshot_value` e `snapshot_delta_previous`, origem dos snapshots por período, dados auditáveis e testes com 12,00% → 16,50%.
+1. Tipos explícitos `snapshot_value` e `snapshot_delta_previous` preparados na migração 11, com fontes por período e testes 12,00% → 16,50%. Instalação remota e geração recorrente são etapas separadas.
 2. Resolver tecnicamente **empate/zero** em P2P sem violar invariantes de conservação, com uma decisão clara sobre a tesouraria. Não confundir zero com anulação/void.
 3. Validar com os jogadores as regras ainda pendentes e atualizar a UI/termos do campeonato quando forem acordadas.
 
@@ -71,4 +71,4 @@
 
 A migração 09 acrescenta apuramento auditado e validação administrativa persistida para anual/sprints: origem temporal das declarações, ausências explícitas sem classificação, empates partilhados e resultados imutáveis. Não foi aplicada ao Supabase remoto nesta entrega. Ver [matriz de aceitação da #3](ISSUE_3_ACCEPTANCE.md) e [operação](COMPETITION_OPERATIONS.md).
 
-Capturar a última declaração auditada até ao limite não aprova penalizações, declarações tardias ou regras novas de apostas. O delta do sprint continua a usar start/end do próprio sprint; as duas modalidades de mercado e o empate/zero mantêm-se **sem suporte financeiro**. Validar a classificação não chama settlement.
+Capturar a última declaração auditada até ao limite não aprova penalizações nem declarações tardias. O delta da classificação E2 do sprint continua a usar start/end. A migração 11 acrescenta classificações próprias por modalidade aos novos mercados e liquidação regular auditada; o empate/zero continua sem suporte financeiro e bloqueado. Validar uma classificação não executa automaticamente a liquidação.

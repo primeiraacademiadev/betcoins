@@ -64,3 +64,7 @@ Testes de interface cobrem razões de bloqueio e apresentação do resultado.
 
 Continuam fora desta entrega: geração recorrente (#11), resolução financeira de
 empate/zero, modalidades adicionais da #1, void/reversão e migração de produção.
+
+## Seguimento: migração 11
+
+As duas modalidades adicionais estão agora preparadas no código da migração 11, com classificação validada própria e liquidação regular; ver [modalidades](SNAPSHOT_MARKET_MODES.md). A #5 continua aberta para empate/zero, reconciliação legada e dependências de calendário/elegibilidade. Esta secção atualiza o limite histórico da entrega 10 acima. Nenhuma destas migrações foi aplicada remotamente.

@@ -13,7 +13,7 @@ Na plataforma, **Continuar com Google** ou **Continuar com GitHub** permite entr
 - **Fim do campeonato anual:** 31 de dezembro de 2026. A classificação final considera a valorização YTD (%) da carteira nessa data, sujeita a validação posterior.
 - **Concorrentes:** candidatam-se e são admitidos por maioria absoluta do eleitorado elegível, congelado na abertura da votação. O empate entre resultados de um mercado é uma regra diferente da votação.
 - **Scores:** cada concorrente atualiza o seu YTD; guardamos histórico e data de cada atualização. O ranking anual é pela maior valorização percentual.
-- **Sprints semanais e mensais:** usam snapshots YTD congelados. Foram definidas **duas modalidades de mercado**: (1) valor absoluto do snapshot de fecho; (2) diferença em pontos percentuais entre o snapshot do período anterior e o do fecho atual. A modalidade (1) e a ligação explícita ao período anterior aguardam implementação.
+- **Sprints semanais e mensais:** usam snapshots YTD congelados. Foram definidas **duas modalidades de mercado**: (1) valor absoluto do snapshot de fecho; (2) diferença em pontos percentuais entre o snapshot do período anterior e o do fecho atual. Ambas estão preparadas na migração 11, com critério explícito, snapshots de fecho identificados e validação própria por mercado; instalação remota pendente.
 
 ## BetCoins e mercados
 
@@ -49,3 +49,5 @@ O apuramento auditado e a validação final E2 estão preparados na **migração
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.
 
 A liquidação P2P vinculada à classificação validada está preparada na **migração 10, apenas versionada**, dependente da 09. Bloqueia empates, dados incompletos e mercados sem período associado. A #5 continua aberta para as lacunas de produto/finanças. [Critérios, instalação e limites](docs/ISSUE_5_ACCEPTANCE.md).
+
+As [duas modalidades da regra #1](docs/SNAPSHOT_MARKET_MODES.md) estão preparadas na **migração 11, apenas versionada**, dependente de 01–10. Empate/zero continua bloqueado; mercados anteriores mantêm os critérios legados.
