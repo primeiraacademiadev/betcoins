@@ -86,3 +86,11 @@ jobs:
           done
       - name: Concurrent mode validation, settlement and blocked financial ties
         run: python3 tests/db/market_modes_concurrency.py
+      - name: Recurring calendar and generation on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611160003_recurring_bets.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/recurring_bets.sql
+          done
+      - name: Concurrent recurring generation, admissions and trading
+        run: python3 tests/db/recurring_bets_concurrency.py

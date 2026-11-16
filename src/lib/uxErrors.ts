@@ -41,6 +41,8 @@ export function classifyError(error:unknown):UXError {
  const code=typeof e?.code==='string'?e.code:'';
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
+ if(code==='BR001'||code==='BR002')return errorFor('MARKET_PERIOD_REQUIRED');
+ if(code==='BR003')return errorFor('MARKET_CLOSED');
  if(code==='BP001')return errorFor('DUPLICATE_ACTION');
  if(code==='BP002')return errorFor('INVALID_SELECTION');
  if(code==='BP003')return errorFor('PREVIOUS_PERIOD_REQUIRED');
