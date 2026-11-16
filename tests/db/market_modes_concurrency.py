@@ -1,58 +1,6 @@
-"""Snapshot-mode real-session races. Only the disposable localhost PostgreSQL CI service."""
-import concurrent.futures
-import os
-import subprocess
+"""Disposable PostgreSQL concurrency regressions."""
 import time
-
-if os.environ.get('PGHOST') not in ('localhost', '127.0.0.1'):
-    raise RuntimeError('E4 concurrency tests require a disposable local database')
-
-
-def sql(command, app='e4-test', check=True):
-    result = subprocess.run(['psql', '-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1', '-c', command],
-                            env={**os.environ, 'PGAPPNAME': app}, capture_output=True, text=True, timeout=30)
-    if check and result.returncode:
-        raise AssertionError(result.stderr)
-    return result
-
-
-def value(command):
-    return sql(command).stdout.strip().splitlines()[-1]
-
-
-def user(who, command):
-    return f"set role authenticated; select set_config('request.jwt.claim.sub','{who}',false); {command}"
-
-
-def race(commands, cross_cutoff=None):
-    holder = subprocess.Popen(['psql', '-X', '-At', '-v', 'ON_ERROR_STOP=1'],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    try:
-        holder.stdin.write('begin; select pg_advisory_xact_lock(941003);\n\\echo LOCKED\n')
-        holder.stdin.flush()
-        while holder.stdout.readline().strip() != 'LOCKED':
-            if holder.poll() is not None:
-                raise AssertionError('Lock holder exited')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(commands)) as pool:
-            futures = [pool.submit(sql, command, f'e4-racer-{i}', False) for i, command in enumerate(commands)]
-            deadline = time.monotonic() + 10
-            while value("select count(*) from pg_stat_activity where application_name like 'e4-racer-%' and wait_event='advisory'") != str(len(commands)):
-                if time.monotonic() > deadline:
-                    raise AssertionError('Contenders did not all reach the trading mutex')
-                time.sleep(.05)
-            if cross_cutoff:
-                while value(f"select (clock_timestamp()>=closes_at)::text from public.markets where id='{cross_cutoff}'") != 'true':
-                    if time.monotonic() > deadline:
-                        raise AssertionError('Cutoff was not crossed')
-                    time.sleep(.05)
-            holder.stdin.write('commit;\n\\q\n')
-            holder.stdin.flush()
-            return [f.result(timeout=20) for f in futures]
-    finally:
-        if holder.poll() is None:
-            holder.kill()
-        holder.wait(timeout=5)
-
+from db_sessions import race, sql, value, user
 
 admin, maker, taker, buyer = [f'a1000000-0000-4000-8000-00000000000{i}' for i in range(1,5)]
 sql(f"insert into auth.users(id) values('{admin}'),('{maker}'),('{taker}'),('{buyer}'); insert into public.admins(id) values('{admin}'); insert into public.competitors(id) values('{admin}'),('{maker}');")

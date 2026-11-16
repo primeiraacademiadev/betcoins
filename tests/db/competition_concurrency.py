@@ -1,52 +1,12 @@
-"""Real PostgreSQL sessions; CI disposable DB only, never a Supabase URL."""
+"""Real E2 sessions against disposable localhost PostgreSQL only."""
 import concurrent.futures
-import os
 import subprocess
 import time
-
-if os.environ.get('PGHOST') not in ('localhost', '127.0.0.1'):
-    raise RuntimeError('Concurrency fixtures require the local CI PostgreSQL service')
-
-
-def sql(command, app='e2-test', check=True):
-    result = subprocess.run(['psql', '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', command],
-                            env={**os.environ, 'PGAPPNAME': app}, capture_output=True, text=True, timeout=30)
-    if check and result.returncode:
-        raise AssertionError(result.stderr)
-    return result
-
-
-def as_user(user, command):
-    return f"set role authenticated; select set_config('request.jwt.claim.sub','{user}',false); {command}"
+from db_sessions import sql, user as as_user, race as session_race
 
 
 def race(commands, lock=941001):
-    # Hold the same advisory lock as the RPC until BOTH contenders are waiting.
-    holder = subprocess.Popen(['psql', '-X', '-At', '-v', 'ON_ERROR_STOP=1'],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    try:
-        holder.stdin.write(f'begin; select pg_advisory_xact_lock({lock});\n\\echo LOCKED\n')
-        holder.stdin.flush()
-        while holder.stdout.readline().strip() != 'LOCKED':
-            if holder.poll() is not None:
-                raise AssertionError('Lock holder exited')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [pool.submit(sql, command, f'e2-racer-{i}', False) for i, command in enumerate(commands)]
-            deadline = time.monotonic() + 10
-            while True:
-                waiting = sql("select count(*) from pg_stat_activity where application_name like 'e2-racer-%' and wait_event='advisory'").stdout.strip()
-                if waiting == '2':
-                    break
-                if time.monotonic() > deadline:
-                    raise AssertionError('Both sessions did not contend on the lock')
-                time.sleep(.05)
-            holder.stdin.write('commit;\n\\q\n')
-            holder.stdin.flush()
-            return [f.result(timeout=20) for f in futures]
-    finally:
-        if holder.poll() is None:
-            holder.kill()
-        holder.wait(timeout=5)
+    return session_race(commands, lock=lock)
 
 
 admin = 'd0000000-0000-4000-8000-000000000001'
