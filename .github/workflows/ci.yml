@@ -102,3 +102,12 @@ jobs:
           done
       - name: Concurrent declarations, deadlines, capture, settlement and penalized ties
         run: python3 tests/db/final_declarations_concurrency.py
+      - name: First YTD, mid-period references and legacy preservation on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/entry_baseline_guard.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611160005_entry_baselines.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/entry_baselines.sql
+          done
+      - name: Concurrent first scores, effective entry, cutoff, settlement and ties
+        run: python3 tests/db/entry_baselines_concurrency.py

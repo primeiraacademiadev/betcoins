@@ -118,3 +118,7 @@ A #11 mantém esses pontos pendentes, além das decisões financeiras de empate/
 - Sessões PostgreSQL concorrentes: declaração repetida, declaração tardia contra
   apuramento, apuramento/validação/liquidação repetidos, conservação monetária e
   empate penalizado com posições/reservas intactas.
+
+## Seguimento: migração 14
+
+O [YTD inicial e a participação efetiva](ENTRY_BASELINES.md) estão agora preparados na migração 14. Atualiza o limite histórico sobre entradas acima: períodos em curso à entrada usam o primeiro YTD; os seguintes usam o fecho anterior. Históricos e contratos não são reescritos; a instalação remota e a reconciliação legada continuam separadas.
