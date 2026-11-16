@@ -4,11 +4,14 @@ export type UXErrorCode =
  | 'NOT_AUTHORIZED'|'SESSION_REQUIRED'|'MARKET_CLOSED'|'OFFER_UNAVAILABLE'
  | 'POSITION_UNAVAILABLE'|'APPLICATION_DECIDED'|'DUPLICATE_ACTION'
  | 'INVALID_NICKNAME'|'INVALID_DATE'|'INVALID_SELECTION'|'INVALID_PRICE'
- | 'PREVIOUS_PERIOD_REQUIRED'|'BET_PAUSED'
+ | 'PREVIOUS_PERIOD_REQUIRED'|'BET_PAUSED'|'FINAL_REQUIRED'|'FINAL_CLOSED'|'FINAL_ADMIN'
  | 'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
  | 'INVALID_LOT'|'INVALID_YTD'|'NETWORK_UNCERTAIN'|'SERVICE_UNAVAILABLE'|'UNKNOWN';
 export type UXError = { code:UXErrorCode; title:string; explanation:string; action:string; field?:string };
 const catalog:Record<UXErrorCode,Omit<UXError,'code'>> = {
+ FINAL_REQUIRED:{title:'Declaração de fecho pendente',explanation:'Antes de atualizar o YTD corrente, é necessário resolver o fecho mais antigo.',action:'Preenche a secção Declarações de fecho obrigatórias. Se o prazo terminou, aguarda o apuramento.'},
+ FINAL_CLOSED:{title:'Prazo de fecho encerrado',explanation:'Já não é possível registar uma nova declaração para este fecho.',action:'Atualiza os dados e consulta o apuramento.'},
+ FINAL_ADMIN:{title:'Recolha de fecho por concluir',explanation:'É necessário respeitar o prazo administrativo e apurar as declarações antes de capturar o fecho.',action:'Consulta Recolha e apuramento de declarações finais na gestão.'},
  BET_PAUSED:{title:'Negociação suspensa',explanation:'A gestão suspendeu esta bet. As posições e reservas existentes mantêm-se.',action:'Podes cancelar ofertas não correspondidas ou aguardar a retoma.'},
  PREVIOUS_PERIOD_REQUIRED:{title:'Falta o período anterior',explanation:'Esta modalidade exige um único período anterior registado, com snapshot de fecho auditável antes da validação.',action:'Revê o calendário. Não uses o início do sprint nem zero como substitutos.'},
  SETTLEMENT_BLOCKED:{title:'Liquidação bloqueada',explanation:'O mercado exige um resultado validado, completo, sem empate relevante e com participantes e período coincidentes.',action:'Consulta o apuramento; não escolhas um vencedor manualmente.'},
@@ -42,6 +45,10 @@ export function classifyError(error:unknown):UXError {
  const code=typeof e?.code==='string'?e.code:'';
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
+ if(code==='BF001')return errorFor('FINAL_REQUIRED');
+ if(code==='BF002')return errorFor('FINAL_CLOSED');
+ if(code==='BF003'||code==='BF005')return errorFor('FINAL_ADMIN');
+ if(code==='BF004')return errorFor('INVALID_YTD');
  if(code==='BR001'||code==='BR002')return errorFor('MARKET_PERIOD_REQUIRED');
  if(code==='BR003')return errorFor('BET_PAUSED');
  if(code==='BP001')return errorFor('DUPLICATE_ACTION');

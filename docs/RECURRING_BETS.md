@@ -107,3 +107,7 @@ Não se implementa reversão nem migração retroativa de mercados antigos.
 - Sessões reais concorrentes: duas gerações, votos decisivos e trigger de admissão
   por não administrador, duas admissões, negociação em simultâneo com reconciliação
   e suspensão, preservando contratos e conservação de BetCoins.
+
+## Seguimento: migração 13
+
+A [recolha de declarações finais e as penalizações locais](FINAL_DECLARATIONS.md) estão agora preparadas na migração 13. Este seguimento atualiza o limite histórico da entrega 12 acima; não ativa baseline especial de entrada, empate/zero ou reconciliação legada. Instalação remota continua pendente.

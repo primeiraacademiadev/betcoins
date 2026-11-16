@@ -94,3 +94,11 @@ jobs:
           done
       - name: Concurrent recurring generation, admissions and trading
         run: python3 tests/db/recurring_bets_concurrency.py
+      - name: Mandatory final declarations and local penalties on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611160004_final_declarations.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/final_declarations.sql
+          done
+      - name: Concurrent declarations, deadlines, capture, settlement and penalized ties
+        run: python3 tests/db/final_declarations_concurrency.py

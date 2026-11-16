@@ -23,7 +23,7 @@
 - A modalidade escolhida é atributo do mercado, visível ao utilizador; o motor não deve adivinhar a modalidade.
 - **Exemplo:** snapshot anterior 12,00% e snapshot do fecho atual 16,50%. No mercado «valor do snapshot», a referência é **16,50%**; no mercado «diferença entre snapshots», a referência é **+4,50 p.p.** Estes são resultados diferentes, não duas maneiras de apresentar o mesmo mercado.
 - **Implementação preparada na migração 11:** mercados com modalidade explícita `snapshot_value` ou `snapshot_delta_previous`, fontes de fecho identificadas e classificação validada própria. O delta start/end do próprio sprint permanece apenas nos mercados/classificações legados. A migração 11 não foi aplicada ao Supabase remoto; ver [modalidades e operação](SNAPSHOT_MARKET_MODES.md).
-- **A validar com o grupo:** horário semanal de referência e fuso horário, ausência de atualização, último valor válido e eventual penalização de **1 p.p.** (foi proposta, ainda não está automatizada); inscrições a meio do período, correções/tardios, retiradas.
+- **A validar com o grupo:** horário semanal de referência e fuso horário, ausência de atualização e regras não abrangidas pelo fluxo de fecho; a migração 13 prepara a omissão final com último valor conhecido e penalização local de **1 p.p.** (instalação remota pendente); inscrições a meio do período, correções/tardios, retiradas.
 
 ## 3. Outcomes, mercados P2P e empate
 
@@ -72,3 +72,7 @@
 A migração 09 acrescenta apuramento auditado e validação administrativa persistida para anual/sprints: origem temporal das declarações, ausências explícitas sem classificação, empates partilhados e resultados imutáveis. Não foi aplicada ao Supabase remoto nesta entrega. Ver [matriz de aceitação da #3](ISSUE_3_ACCEPTANCE.md) e [operação](COMPETITION_OPERATIONS.md).
 
 Capturar a última declaração auditada até ao limite não aprova penalizações nem declarações tardias. O delta da classificação E2 do sprint continua a usar start/end. A migração 11 acrescenta classificações próprias por modalidade aos novos mercados e liquidação regular auditada; o empate/zero continua sem suporte financeiro e bloqueado. Validar uma classificação não executa automaticamente a liquidação.
+
+## 8. Declarações finais e omissões — migração 13
+
+A autorização de implementar as declarações finais e penalizações da #11 acrescenta recolha administrativa após o corte, uma declaração por fechos coincidentes e bloqueio das atualizações correntes enquanto houver obrigações pendentes. O prazo é escolhido pela gestão. Uma omissão com YTD conhecido aplica −1 pp apenas ao score efetivo do fecho, mantendo o original e a origem. O delta do período seguinte usa o original anterior, sem propagar penalizações. Ver [fluxo, instalação e limites](FINAL_DECLARATIONS.md). As duas modalidades, históricos imutáveis e bloqueio de empate/zero são preservados. Migração apenas versionada; Supabase remoto não migrado.
