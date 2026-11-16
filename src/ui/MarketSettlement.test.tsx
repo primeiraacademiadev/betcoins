@@ -16,7 +16,7 @@ describe('validated settlement presentation',()=>{
   const html=renderToStaticMarkup(<ResolutionDetails result={{status:'ready',criterion:'sprint_delta_start_end'}} winner="A <B>"/>);
   expect(html).toContain('A &lt;B&gt;');
   expect(html).toContain('próprio sprint');
-  expect(html).toContain('ainda não estão disponíveis');
+  expect(html).toContain('Legado:');
  });
  it('does not interpret an unknown status as permission to settle',()=>{
   expect(resolutionMessage('new_state')).toContain('indisponível');
