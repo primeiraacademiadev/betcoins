@@ -1,11 +1,17 @@
 import {describe,it,expect} from 'vitest';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {OccurrencePicker} from '../ui/RecurringBets';
-import {occurrenceStatus,marketsForOccurrence,type BetOccurrence,type BetDefinition} from './recurringBets';
+import {occurrenceStatus,marketsForOccurrence,marketTradingBlocked,type BetOccurrence,type BetDefinition} from './recurringBets';
 import type {Market} from './domain';
 const o:BetOccurrence={id:'o',championship_id:'c',kind:'weekly',period_key:'2026-W47',name:'Semana 47',starts_at:'2026-11-13T21:00:00Z',ends_at:'2026-11-20T21:00:00Z',sprint_id:'s',previous_occurrence_id:'p'};
 const m:Market={id:'m',title:'Mercado',kind:'weekly',category:'winner',closes_at:o.ends_at,state:'open',definition_id:'d',occurrence_id:'o',mode:'snapshot_value'};
 describe('recurring calendar navigation',()=>{
+ it('blocks paused/closed trading and allows published future periods until cutoff',()=>{
+  const now=Date.parse('2026-11-12');
+  expect(marketTradingBlocked(m,[],now)).toBe(false);
+  expect(marketTradingBlocked(m,[{id:'d',championship_id:'c',kind:'weekly',mode:'snapshot_value',active:false}],now)).toBe(true);
+  expect(marketTradingBlocked(m,[],Date.parse('2026-11-21'))).toBe(true);
+ });
  it('distinguishes future, current, pending, settled and unavailable history',()=>{
   expect(occurrenceStatus(o,[m],Date.parse('2026-11-12'))).toBe('Futura');
   expect(occurrenceStatus(o,[m],Date.parse('2026-11-16'))).toBe('Em curso');

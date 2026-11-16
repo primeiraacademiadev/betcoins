@@ -117,7 +117,12 @@ begin
    if (select count(*) from public.competitors)<2 then v_blocked:=v_blocked+1;continue;end if;
    ref:=null;
    if v_def.mode='snapshot_delta_previous' then
-    if v_occ.kind='annual' then ref:=public.get_previous_market_period(p_championship,null);
+    if v_occ.kind='annual' then
+     -- Internal trigger paths may be invoked without a user JWT (SQL operator).
+     select case when count(*)=1 then min(jsonb_build_object('championship_id',c.id,'sprint_id',null,'ends_at',c.ends_at)::text)::jsonb end into ref
+      from public.championships c where c.id<>p_championship and c.ends_at=(
+       select max(a.ends_at) from public.championships a where a.id<>p_championship
+        and a.ends_at<=(select starts_at from public.championships where id=p_championship));
     else
      select * into v_previous from public.bet_occurrences where id=v_occ.previous_occurrence_id;
      if found then ref:=jsonb_build_object('championship_id',v_previous.championship_id,'sprint_id',v_previous.sprint_id,'ends_at',v_previous.ends_at);end if;

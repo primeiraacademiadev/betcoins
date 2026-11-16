@@ -4,11 +4,12 @@ export type UXErrorCode =
  | 'NOT_AUTHORIZED'|'SESSION_REQUIRED'|'MARKET_CLOSED'|'OFFER_UNAVAILABLE'
  | 'POSITION_UNAVAILABLE'|'APPLICATION_DECIDED'|'DUPLICATE_ACTION'
  | 'INVALID_NICKNAME'|'INVALID_DATE'|'INVALID_SELECTION'|'INVALID_PRICE'
- | 'PREVIOUS_PERIOD_REQUIRED'
+ | 'PREVIOUS_PERIOD_REQUIRED'|'BET_PAUSED'
  | 'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
  | 'INVALID_LOT'|'INVALID_YTD'|'NETWORK_UNCERTAIN'|'SERVICE_UNAVAILABLE'|'UNKNOWN';
 export type UXError = { code:UXErrorCode; title:string; explanation:string; action:string; field?:string };
 const catalog:Record<UXErrorCode,Omit<UXError,'code'>> = {
+ BET_PAUSED:{title:'Negociação suspensa',explanation:'A gestão suspendeu esta bet. As posições e reservas existentes mantêm-se.',action:'Podes cancelar ofertas não correspondidas ou aguardar a retoma.'},
  PREVIOUS_PERIOD_REQUIRED:{title:'Falta o período anterior',explanation:'Esta modalidade exige um único período anterior registado, com snapshot de fecho auditável antes da validação.',action:'Revê o calendário. Não uses o início do sprint nem zero como substitutos.'},
  SETTLEMENT_BLOCKED:{title:'Liquidação bloqueada',explanation:'O mercado exige um resultado validado, completo, sem empate relevante e com participantes e período coincidentes.',action:'Consulta o apuramento; não escolhas um vencedor manualmente.'},
  MARKET_PERIOD_REQUIRED:{title:'Período necessário',explanation:'O mercado deve estar associado a um campeonato ou sprint válido e aberto.',action:'Atualiza a página e seleciona o período na gestão.'},
@@ -42,7 +43,7 @@ export function classifyError(error:unknown):UXError {
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
  if(code==='BR001'||code==='BR002')return errorFor('MARKET_PERIOD_REQUIRED');
- if(code==='BR003')return errorFor('MARKET_CLOSED');
+ if(code==='BR003')return errorFor('BET_PAUSED');
  if(code==='BP001')return errorFor('DUPLICATE_ACTION');
  if(code==='BP002')return errorFor('INVALID_SELECTION');
  if(code==='BP003')return errorFor('PREVIOUS_PERIOD_REQUIRED');

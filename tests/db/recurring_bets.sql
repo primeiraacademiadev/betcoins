@@ -56,7 +56,9 @@ set role authenticated;
 select public.place_offer(:'future_outcome','back',2,10) as offer \gset
 reset role;
 create temporary table protected_offer as select * from public.offers where id=:'offer';
+select set_config('request.jwt.claim.sub','',false);
 insert into public.competitors(id) values('c1000000-0000-4000-8000-000000000003');
+select set_config('request.jwt.claim.sub','c1000000-0000-4000-8000-000000000001',false);
 select pg_temp.calendar_check(not exists(select 1 from public.markets m join public.bet_definitions d on d.id=m.definition_id where d.championship_id=:'champ' and d.active and m.closes_at>clock_timestamp() and not exists(select 1 from public.outcomes o where o.market_id=m.id and o.competitor_id='c1000000-0000-4000-8000-000000000003')),'Admission must reach every tradable occurrence');
 select pg_temp.calendar_check(not exists(select 1 from public.outcomes where market_id=:'history_market' and competitor_id='c1000000-0000-4000-8000-000000000003'),'Admission changed closed universe');
 select pg_temp.calendar_check((select to_jsonb(o)=to_jsonb(p) from public.offers o join protected_offer p using(id)),'Admission changed offer/odds/collateral');
