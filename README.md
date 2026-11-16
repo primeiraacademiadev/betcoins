@@ -51,3 +51,5 @@ O apuramento auditado e a validação final E2 estão preparados na **migração
 A liquidação P2P vinculada à classificação validada está preparada na **migração 10, apenas versionada**, dependente da 09. Bloqueia empates, dados incompletos e mercados sem período associado. A #5 continua aberta para as lacunas de produto/finanças. [Critérios, instalação e limites](docs/ISSUE_5_ACCEPTANCE.md).
 
 As [duas modalidades da regra #1](docs/SNAPSHOT_MARKET_MODES.md) estão preparadas na **migração 11, apenas versionada**, dependente de 01–10. Empate/zero continua bloqueado; mercados anteriores mantêm os critérios legados.
+
+As [bets recorrentes e o calendário 2026](docs/RECURRING_BETS.md) estão preparados na **migração 12, apenas versionada**, dependente de 01–11: geração idempotente, duas modalidades, atualização de concorrentes nos mercados negociáveis e navegação por ocorrências. Empate/zero continua bloqueado. A #11 permanece aberta para os critérios operacionais ainda não implementados.
