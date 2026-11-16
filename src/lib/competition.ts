@@ -1,6 +1,7 @@
+import type {ScoreAudit} from './finalDeclarations';
 import type {Competitor} from './domain';
 export type Capture = {id:string;cutoff_at:string;captured_at:string;captured_by:string};
-export type CompetitionRow = {
+export type CompetitionRow = ScoreAudit & {
  competitor_id:string;nickname:string;start_ytd:number|null;end_ytd:number|null;
  start_declared_at:string|null;end_declared_at:string|null;
  start_source_id:number|null;end_source_id:number|null;

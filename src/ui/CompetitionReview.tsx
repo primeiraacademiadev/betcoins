@@ -1,3 +1,4 @@
+import {ScoreAuditDetails} from './FinalDeclarations';
 import {useEffect,useState} from 'react';
 import {rpc} from '../lib/supabase';
 import {classifyError,errorText} from '../lib/uxErrors';
@@ -17,6 +18,7 @@ export function CompetitionRows({review,isSprint}:{review:Review;isSprint:boolea
    <span className="rank-name">{row.nickname}
     {isSprint&&<small className="movement-date">Inicial: {score(row.start_ytd)} · Declarado: {date(row.start_declared_at)}</small>}
     <small className="movement-date">Final: {score(row.end_ytd)} · Declarado: {date(row.end_declared_at)}</small>
+    <ScoreAuditDetails row={row}/>
     {row.status!=='complete'&&<small className="movement-date">Sem classificação: {row.status==='missing_start'?'falta referência inicial (inclui entradas a meio do período)':'falta declaração até ao fecho'}.</small>}
    </span>
    <strong>{row.value===null?'—':Number(row.value).toFixed(4)+(isSprint?' pp':'%')}</strong>

@@ -53,3 +53,5 @@ A liquidação P2P vinculada à classificação validada está preparada na **mi
 As [duas modalidades da regra #1](docs/SNAPSHOT_MARKET_MODES.md) estão preparadas na **migração 11, apenas versionada**, dependente de 01–10. Empate/zero continua bloqueado; mercados anteriores mantêm os critérios legados.
 
 As [bets recorrentes e o calendário 2026](docs/RECURRING_BETS.md) estão preparados na **migração 12, apenas versionada**, dependente de 01–11: geração idempotente, duas modalidades, atualização de concorrentes nos mercados negociáveis e navegação por ocorrências. Empate/zero continua bloqueado. A #11 permanece aberta para os critérios operacionais ainda não implementados.
+
+As [declarações finais obrigatórias e penalizações locais](docs/FINAL_DECLARATIONS.md) estão preparadas na **migração 13, apenas versionada**, dependente de 01–12: fechos coincidentes partilham declaração, a gestão determina o prazo e omissões com YTD conhecido recebem −1 pp apenas no fecho atual. O valor original fica preservado para não acumular penalizações nas referências seguintes. Empate/zero mantém-se bloqueado.
