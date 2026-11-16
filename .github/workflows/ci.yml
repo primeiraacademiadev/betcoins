@@ -69,3 +69,11 @@ jobs:
           PGDATABASE=betcoins_upgrade psql -v ON_ERROR_STOP=1 -f tests/db/competition.sql
       - name: Concurrent admissions, captures, validation and cutoff timestamps
         run: python3 tests/db/competition_concurrency.py
+      - name: Validated P2P settlement on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611160001_validated_market_settlement.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/markets.sql
+          done
+      - name: Concurrent matching, spending, resale, settlement and cutoff
+        run: python3 tests/db/markets_concurrency.py

@@ -47,3 +47,5 @@ Aplicação web pública em **GitHub Pages** (React, TypeScript, Vite), autentic
 O apuramento auditado e a validação final E2 estão preparados na **migração 09, ainda não aplicada ao Supabase remoto nesta entrega**. Até à instalação, a interface mantém consulta dos dados antigos e indica a indisponibilidade dos novos controlos. [Critérios e testes](docs/ISSUE_3_ACCEPTANCE.md) · [Instalação e operação](docs/COMPETITION_OPERATIONS.md).
 
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.
+
+A liquidação P2P vinculada à classificação validada está preparada na **migração 10, apenas versionada**, dependente da 09. Bloqueia empates, dados incompletos e mercados sem período associado. A #5 continua aberta para as lacunas de produto/finanças. [Critérios, instalação e limites](docs/ISSUE_5_ACCEPTANCE.md).
