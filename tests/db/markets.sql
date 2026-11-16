@@ -11,10 +11,10 @@ select set_config('request.jwt.claim.sub','e0000000-0000-4000-8000-000000000001'
 
 -- Create actual market/outcomes, plus an immutable E2 fixture for its exact period.
 -- E2's own suite tests temporal capture/validation; this suite tests its consumer.
-create function pg_temp.market_fixture(p_kind text,p_category text,p_tie boolean default false,p_missing boolean default false)
+create function pg_temp.market_fixture(p_kind text,p_category text,p_tie boolean default false,p_missing boolean default false,p_tie_last boolean default false)
 returns uuid language plpgsql as $$
 declare c uuid;s uuid;m uuid;a uuid;b uuid;v_cutoff timestamptz:=transaction_timestamp()-interval '1 second';
- o record;h bigint;v_value numeric;v_index integer:=0;
+ o record;h bigint;v_value numeric;v_initial numeric;v_index integer:=0;
 begin
  insert into public.championships(name,starts_at,ends_at) values('E4 fixture',now()-interval '3 days',now()+interval '1 hour') returning id into c;
  if p_kind<>'annual' then
@@ -37,6 +37,7 @@ begin
    when 'e0000000-0000-4000-8000-000000000001' then 50
    when 'e0000000-0000-4000-8000-000000000002' then case when p_tie then 50 else 20 end
    when 'e0000000-0000-4000-8000-000000000003' then 10 else -v_index end;
+  if p_tie_last then v_value:=0;end if;
   insert into public.score_history(competitor_id,ytd,created_at)
    values(o.competitor_id,v_value,v_cutoff-interval '1 second') returning id into h;
   if p_missing and o.competitor_id='e0000000-0000-4000-8000-000000000001' then
@@ -46,10 +47,11 @@ begin
     values(b,o.competitor_id,o.label,h,v_cutoff-interval '1 second',v_value);
   end if;
   if a is not null then
+   v_initial:=case when o.competitor_id='e0000000-0000-4000-8000-000000000001' and not p_tie then 45 else 0 end;
    insert into public.score_history(competitor_id,ytd,created_at)
-    values(o.competitor_id,0,now()-interval '2 days') returning id into h;
+    values(o.competitor_id,v_initial,now()-interval '2 days') returning id into h;
    insert into public.competition_capture_scores(capture_id,competitor_id,nickname,source_history_id,declared_at,ytd)
-    values(a,o.competitor_id,o.label,h,now()-interval '2 days',0);
+    values(a,o.competitor_id,o.label,h,now()-interval '2 days',v_initial);
   end if;
  end loop;
  perform public.validate_competition(c,s,'Fixture E4: revisão completa dos resultados');
@@ -79,8 +81,8 @@ do $$declare m uuid;r jsonb;k text;cat text;expected uuid;begin
    m:=pg_temp.market_fixture(k,cat);r:=public.get_market_resolution(m);
    if r->>'status'<>'ready' then raise exception 'Expected ready %/%: %',k,cat,r;end if;
    select o.competitor_id into expected from public.outcomes o where o.id=(r->>'winner_outcome_id')::uuid;
-   if cat='winner' and expected<>'e0000000-0000-4000-8000-000000000001' then raise exception 'Wrong winner';end if;
-   if cat='second' and expected<>'e0000000-0000-4000-8000-000000000002' then raise exception 'Wrong second';end if;
+   if cat='winner' and expected<>(case when k='annual' then 'e0000000-0000-4000-8000-000000000001' else 'e0000000-0000-4000-8000-000000000002' end)::uuid then raise exception 'Wrong winner';end if;
+   if cat='second' and expected<>(case when k='annual' then 'e0000000-0000-4000-8000-000000000002' else 'e0000000-0000-4000-8000-000000000003' end)::uuid then raise exception 'Wrong second';end if;
    if cat='last' and expected::text like 'e0000000%' then raise exception 'Wrong last';end if;
    perform public.settle_market(m,(r->>'winner_outcome_id')::uuid);
   end loop;
@@ -95,6 +97,9 @@ do $$declare m uuid;r jsonb;k text;cat text;expected uuid;begin
  if public.get_market_resolution(m)->>'status'<>'ready' then raise exception 'Irrelevant top tie should not select a false last';end if;
  m:=pg_temp.market_fixture('annual','winner',false,true);
  if public.get_market_resolution(m)->>'status'<>'incomplete' then raise exception 'Missing scores not blocked';end if;
+ perform pg_temp.must_fail(format('select public.settle_market(%L,null)',m),'BM004');
+ m:=pg_temp.market_fixture('annual','last',false,false,true);
+ if public.get_market_resolution(m)->>'status'<>'tie_unsupported' then raise exception 'Last-place tie not blocked';end if;
  m:=pg_temp.market_fixture('annual','winner');
  update public.markets set closes_at=closes_at-interval '1 minute' where id=m;
  if public.get_market_resolution(m)->>'status'<>'period_mismatch' then raise exception 'Mismatched period not blocked';end if;
@@ -103,14 +108,26 @@ do $$declare m uuid;r jsonb;k text;cat text;expected uuid;begin
  if public.get_market_resolution(m)->>'status'<>'universe_changed' then raise exception 'Outcome subset not blocked';end if;
 end $$;
 
+do $$declare c uuid;m uuid;begin
+ insert into public.championships(name,starts_at,ends_at) values('Awaiting result',now()-interval '1 day',now()+interval '1 day') returning id into c;
+ m:=public.create_competition_market('Awaiting validation',c,null,'winner');
+ update public.markets set closes_at=now()-interval '1 second' where id=m;
+ if public.get_market_resolution(m)->>'status'<>'awaiting_validation' then raise exception 'Unvalidated result accepted';end if;
+ perform pg_temp.must_fail(format('select public.settle_market(%L,null)',m),'BM004');
+ insert into public.markets(title,kind,category,closes_at) values('Legacy market','annual','winner',now()-interval '1 second') returning id into m;
+ if public.get_market_resolution(m)->>'status'<>'unlinked' then raise exception 'Legacy market automatically bound';end if;
+ perform pg_temp.must_fail(format('select public.settle_market(%L,null)',m),'BM004');
+end $$;
+
 -- Economic regression: partial BACK and LAY, cancellation, full secondary sale,
 -- current owner payoff, unmatched release, conservation and immutable retries.
 select pg_temp.market_fixture('weekly','winner') as economic_market \gset
-select id as economic_winner from public.outcomes where market_id=:'economic_market' and competitor_id='e0000000-0000-4000-8000-000000000001' \gset
+select public.get_market_resolution(:'economic_market')->>'winner_outcome_id' as economic_winner \gset
 update public.markets set closes_at=clock_timestamp()+interval '1 hour' where id=:'economic_market';
 set role authenticated;
 select public.place_offer(:'economic_winner','back',1.25,20) as offer_back \gset
 select public.place_offer(:'economic_winner','lay',1.20,20) as offer_lay \gset
+select pg_temp.must_fail(format('select public.settle_market(%L,%L)',:'economic_market',:'economic_winner'),'BM001');
 select pg_temp.must_fail(format('select public.place_offer(%L,null,2,10)',:'economic_winner'),'BM002');
 select pg_temp.must_fail(format('select public.place_offer(%L,''back'',''NaN''::numeric,10)',:'economic_winner'),'BM002');
 select pg_temp.must_fail(format('select public.accept_offer(%L,null)',:'offer_back'),'BM002');
@@ -142,7 +159,9 @@ select set_config('request.jwt.claim.sub','e0000000-0000-4000-8000-000000000002'
 select pg_temp.must_fail(format('select public.settle_market(%L,%L)',:'economic_market',:'economic_winner'),'42501');
 select set_config('request.jwt.claim.sub','e0000000-0000-4000-8000-000000000001',false);
 select public.settle_market(:'economic_market',:'economic_winner');
+reset role;
 select count(*) as ledger_count from public.ledger \gset
+set role authenticated;
 select public.settle_market(:'economic_market',:'economic_winner');
 select pg_temp.must_fail(format('select public.settle_market(%L,null)',:'economic_market'),'BM004');
 reset role;

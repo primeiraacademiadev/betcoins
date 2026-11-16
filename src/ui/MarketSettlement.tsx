@@ -20,7 +20,7 @@ export function resolutionMessage(status:string):string {
 export function ResolutionDetails({result,winner}:{result:Resolution;winner?:string}){
  return <><p className="footnote" role="status">{resolutionMessage(result.status)}</p>
   {result.status==='ready'&&<p>Resultado validado: <strong>{winner}</strong></p>}
-  {result.criterion&&<p className="footnote">Critério: {result.criterion==='annual_ytd'?'YTD absoluto no fecho anual':'ΔYTD entre início e fim do próprio sprint (pp)'}. As duas novas modalidades de mercado da regra #1 ainda não estão disponíveis.</p>}</>;
+  {result.criterion&&<p className="footnote">Critério: {result.criterion==='annual_ytd'?'YTD absoluto no fecho anual':'ΔYTD entre início e fim do próprio sprint (pp)'}. As modalidades adicionais de aposta ainda não estão disponíveis.</p>}</>;
 }
 export function MarketSettlement({market,outcomeLabels,busy,onSettle}:{market:Market;outcomeLabels:Record<string,string>;busy:boolean;onSettle:(winner:string)=>void}){
  const [result,setResult]=useState<Resolution|null>(null),[revision,setRevision]=useState(0),[failed,setFailed]=useState(false);

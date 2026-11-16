@@ -33,6 +33,12 @@ describe('validação contextual', () => {
  });
 });
 describe('catálogo de erros RPC', () => {
+ it('explica bloqueios de liquidação sem expor os detalhes SQL',()=>{
+  expect(classifyError({code:'BM004',detailMessage:'private validation uuid'}).code).toBe('SETTLEMENT_BLOCKED');
+  expect(errorText(classifyError({code:'BM004',detailMessage:'private validation uuid'}))).not.toContain('private validation uuid');
+  expect(classifyError({code:'BM003'}).code).toBe('MARKET_PERIOD_REQUIRED');
+  expect(classifyError({code:'BM001'}).code).toBe('MARKET_CLOSED');
+ });
  it('não confunde saldo insuficiente com falta de autorização', () => {
   expect(classifyError({code:'23514', detailMessage:'saldo insuficiente'}).code).toBe('BALANCE_INSUFFICIENT');
   expect(classifyError({code:'42501',detailMessage:'permission denied'}).code).toBe('NOT_AUTHORIZED');
