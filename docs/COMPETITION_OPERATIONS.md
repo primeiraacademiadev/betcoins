@@ -37,3 +37,8 @@ O **Fecho anual** usa o mesmo fluxo, apenas com snapshot final e classificação
 ## Verificação automatizada
 
 `npm test` e `npm run build`; no CI, `tests/db/competition.sql` nos três percursos de instalação e `tests/db/competition_concurrency.py` com sessões reais concorrentes. O teste Python recusa hosts diferentes de localhost/127.0.0.1. Nenhum teste aponta para Supabase remoto.
+
+
+## Exports SQL gerados
+
+Os caminhos históricos da baseline e upgrade 03–08 são produzidos por `python scripts/build_sql_bundles.py all`, a partir das migrações canónicas e templates. Os testes verificam que os bytes SQL são os mesmos dos exports congelados. Os exports deixam de ser cópias versionadas. O gerador não executa SQL; a instalação remota continua a exigir autorização separada. Ver [segurança e duplicação](SONAR_QUALITY.md).

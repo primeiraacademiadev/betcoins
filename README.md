@@ -63,3 +63,5 @@ Reconciliação de legado: [pré-visualização, auditoria e preservação de co
 Associação de legado: [preparação suspensa, revisão de compatibilidade e ligação auditada às bets](docs/LEGACY_BET_ASSOCIATION.md), migração 16 apenas versionada, dependente de 01–15.
 
 #11: [matriz de aceitação do modelo atual e evidência dos 30 critérios](docs/ISSUE_11_ACCEPTANCE.md). Migração 17 de estatísticas/histórico apenas versionada, sem Supabase remoto. Compatibilidade legada não exigida.
+
+Qualidade: [instalação de dependências com lock, exports SQL gerados e âmbito do Sonar](docs/SONAR_QUALITY.md). Gerar exports não aplica migrações.

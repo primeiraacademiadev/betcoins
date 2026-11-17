@@ -147,3 +147,7 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Frozen exports generated from canonical migrations; never edit copied SQL.
+/supabase/baselines/20261115_full_install.sql
+/supabase/deploy/20261115_manual_upgrade_03_to_08.sql

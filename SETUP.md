@@ -14,9 +14,9 @@
 1. Criar projeto Supabase Free.
 2. **Instalação nova e vazia:** escolher exatamente um dos seguintes caminhos:
    - Método recomendado para projetos geridos por Supabase CLI: aplicar por ordem os nove ficheiros de `supabase/migrations/`, conservando o histórico de migrações.
-   - Método de instalação SQL manual: executar `supabase/baselines/20261115_full_install.sql` (01–07), depois `202611150004_position_settlement_pnl.sql` (08) e `202611150005_competition_validation.sql` (09). Registar a baseline; não reaplicar as migrações 01–07.
+   - Método de instalação SQL manual: gerar primeiro os exports com `python scripts/build_sql_bundles.py all` (não executa SQL) e, apenas após autorização de instalação, executar `supabase/baselines/20261115_full_install.sql` (01–07), depois `202611150004_position_settlement_pnl.sql` (08) e `202611150005_competition_validation.sql` (09). Registar a baseline; não reaplicar as migrações 01–07.
 3. **Projeto existente:** nunca executar a baseline. Antes de qualquer alteração, consultar `supabase_migrations.schema_migrations` (ou o histórico oficial do projeto); comparar as versões efetivamente aplicadas com os nomes em `supabase/migrations/`, fazer backup e aplicar **apenas as versões em falta**, pela ordem original. Não deduzir o estado remoto a partir do CI ou de GitHub Pages. A migração 09 está preparada, mas **não foi aplicada ao Supabase remoto** nesta entrega; ver [operação E2](docs/COMPETITION_OPERATIONS.md).
-4. **Atualizações futuras:** criar novas migrações aditivas; manter os sete ficheiros originais e a baseline de 2026-11-15 imutáveis. Uma nova baseline deverá ter data/versão própria e ser verificada num PostgreSQL descartável.
+4. **Atualizações futuras:** criar novas migrações aditivas; manter os ficheiros originais e o conteúdo congelado da baseline de 2026-11-15 imutáveis. A baseline é gerada a partir das fontes canónicas e verificada por SHA-256; o export gerado não é versionado. Uma nova baseline deverá ter data/versão própria e ser verificada num PostgreSQL descartável.
 5. Criar uma conta de teste com social login.
 6. No SQL Editor, **como administrador da BD**, atribuir o primeiro administrador e concorrente usando o UUID da conta de teste:
 
@@ -96,3 +96,5 @@ A função `grant_weekly()` distribui 1 000 BetCoins aos espectadores elegíveis
 - Sprints: captura manual de snapshots nos limites; não existe recolha automática de scores.
 - O mecanismo de correção/reversão de liquidações não está implementado.
 - Só existe a gestão inicial de um campeonato; múltiplas temporadas são trabalho futuro.
+
+Geração dos exports, política de instalação de dependências e análise Sonar: [segurança e duplicação](docs/SONAR_QUALITY.md). Nenhum dos comandos de geração aplica migrações.

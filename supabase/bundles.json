@@ -1,0 +1,68 @@
+{
+  "baseline": {
+    "template": "supabase/templates/20261115_full_install.sql.tmpl",
+    "output": "supabase/baselines/20261115_full_install.sql",
+    "sha256": "aef57446fe29d3d4ce34581b37235c65f122e0b88945c1141a07496b6a09d36c",
+    "sources": [
+      {
+        "path": "supabase/migrations/202611120001_init.sql",
+        "sha256": "cff9e704816d8e42514309aeebf61fb8f459dafd6c27281772fa4bd94dda9162"
+      },
+      {
+        "path": "supabase/migrations/202611120002_sprints.sql",
+        "sha256": "f05eca06c3160cba8c37cde06e8978d1044eecb769f9a49343ce5f478f357045"
+      },
+      {
+        "path": "supabase/migrations/202611140001_sprint_delta.sql",
+        "sha256": "765f3589e6cf1d4a363dc74295b6d463404a4ae1c0a27ff6a81a010c40221a09"
+      },
+      {
+        "path": "supabase/migrations/202611140002_position_cost_basis.sql",
+        "sha256": "3dc31420757a796fea4cb73c67d41e1b77e76271aa4e090f6c5ab2bbf6f1e930"
+      },
+      {
+        "path": "supabase/migrations/202611150001_wallet_reconciliation.sql",
+        "sha256": "af965811ec294f25c64cdb2f717f929aaa9a5f2af7086b4a346a0e26d074ac33"
+      },
+      {
+        "path": "supabase/migrations/202611150002_spectator_rankings.sql",
+        "sha256": "9f3048cc62966c8cf37bc8144540ebc1e58b4737071cf0f3c9deeffb1aec62d0"
+      },
+      {
+        "path": "supabase/migrations/202611150003_partial_resale.sql",
+        "sha256": "aa590e6ccb1965221c12cf1991a2d54da53adc8f6530e9418ab1086d2c3362d9"
+      }
+    ]
+  },
+  "upgrade": {
+    "template": "supabase/templates/20261115_manual_upgrade_03_to_08.sql.tmpl",
+    "output": "supabase/deploy/20261115_manual_upgrade_03_to_08.sql",
+    "sha256": "483582618fa535e97ca1293e09e96d59e7cc12e1ad6a39a34eb37c4a1633946f",
+    "sources": [
+      {
+        "path": "supabase/migrations/202611140001_sprint_delta.sql",
+        "sha256": "765f3589e6cf1d4a363dc74295b6d463404a4ae1c0a27ff6a81a010c40221a09"
+      },
+      {
+        "path": "supabase/migrations/202611140002_position_cost_basis.sql",
+        "sha256": "3dc31420757a796fea4cb73c67d41e1b77e76271aa4e090f6c5ab2bbf6f1e930"
+      },
+      {
+        "path": "supabase/migrations/202611150001_wallet_reconciliation.sql",
+        "sha256": "af965811ec294f25c64cdb2f717f929aaa9a5f2af7086b4a346a0e26d074ac33"
+      },
+      {
+        "path": "supabase/migrations/202611150002_spectator_rankings.sql",
+        "sha256": "9f3048cc62966c8cf37bc8144540ebc1e58b4737071cf0f3c9deeffb1aec62d0"
+      },
+      {
+        "path": "supabase/migrations/202611150003_partial_resale.sql",
+        "sha256": "aa590e6ccb1965221c12cf1991a2d54da53adc8f6530e9418ab1086d2c3362d9"
+      },
+      {
+        "path": "supabase/migrations/202611150004_position_settlement_pnl.sql",
+        "sha256": "b2f0a0f9d233d50ae44b02ab38ce5532a916a0980d216ba3e97483e2ad4d6be2"
+      }
+    ]
+  }
+}
