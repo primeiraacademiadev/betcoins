@@ -59,3 +59,5 @@ As [declarações finais obrigatórias e penalizações locais](docs/FINAL_DECLA
 O [YTD inicial e as entradas a meio do período](docs/ENTRY_BASELINES.md) estão preparados na **migração 14, apenas versionada**, dependente de 01–13. A participação começa no primeiro YTD; a referência inicial é imutável, os períodos seguintes voltam ao fecho anterior e os históricos/pagamentos existentes são preservados. Empate/zero continua bloqueado.
 
 Reconciliação de legado: [pré-visualização, auditoria e preservação de contratos](docs/LEGACY_MARKET_RECONCILIATION.md), migração 15 apenas versionada, dependente de 01–14.
+
+Associação de legado: [preparação suspensa, revisão de compatibilidade e ligação auditada às bets](docs/LEGACY_BET_ASSOCIATION.md), migração 16 apenas versionada, dependente de 01–15.

@@ -75,3 +75,10 @@ describe('reconciliação de contratos legados',()=>{
   expect(classifyError({code:'BL002'}).code).toBe('LEGACY_REVIEW');
  });
 });
+
+describe('associação imutável a bets',()=>{
+ it('explica incompatibilidade ou ligação já fixada sem prometer fusões',()=>{
+  expect(classifyError({code:'BA002'}).code).toBe('ASSOCIATION_BLOCKED');
+  expect(classifyError({code:'BA003'}).code).toBe('ASSOCIATION_BLOCKED');
+ });
+});

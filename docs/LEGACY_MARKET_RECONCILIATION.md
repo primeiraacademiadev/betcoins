@@ -80,3 +80,8 @@ diferentes por modalidade, empate relevante bloqueado e conservação de moedas.
 **A #11 permanece aberta** para contratos com exposição que requeiram uma decisão
 financeira própria e eventual associação/fusão de legado. Empate/zero continua
 bloqueado. Esta entrega não ativa a proposta antiga de anular e devolver colaterais.
+
+
+## Seguimento: migração 16
+
+A [associação revista às bets recorrentes](LEGACY_BET_ASSOCIATION.md) permite organizar mercados compatíveis com revisão e auditoria, alterando apenas a ligação. Atualiza o limite anterior sobre associação: colisões e fusões continuam bloqueadas. Migração apenas versionada, sem instalação remota.
