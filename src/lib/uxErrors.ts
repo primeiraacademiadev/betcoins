@@ -5,10 +5,12 @@ export type UXErrorCode =
  | 'POSITION_UNAVAILABLE'|'APPLICATION_DECIDED'|'DUPLICATE_ACTION'
  | 'INVALID_NICKNAME'|'INVALID_DATE'|'INVALID_SELECTION'|'INVALID_PRICE'
  | 'PREVIOUS_PERIOD_REQUIRED'|'BET_PAUSED'|'FINAL_REQUIRED'|'FINAL_CLOSED'|'FINAL_ADMIN'|'INITIAL_IMMUTABLE'|'INITIAL_PARTICIPANTS'
- | 'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
+ | 'LEGACY_REVIEW'|'PREVIEW_CHANGED'|'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
  | 'INVALID_LOT'|'INVALID_YTD'|'NETWORK_UNCERTAIN'|'SERVICE_UNAVAILABLE'|'UNKNOWN';
 export type UXError = { code:UXErrorCode; title:string; explanation:string; action:string; field?:string };
 const catalog:Record<UXErrorCode,Omit<UXError,'code'>> = {
+ LEGACY_REVIEW:{title:'Mercado em revisão',explanation:'O contrato legado ou os participantes exigem reconciliação. As posições e reservas mantêm-se.',action:'Consulta a gestão. Podes cancelar ofertas não correspondidas; não há devoluções automáticas.'},
+ PREVIEW_CHANGED:{title:'Revisão desatualizada',explanation:'O mercado ou as entradas mudaram desde a pré-visualização.',action:'Pré-visualiza novamente e revê as alterações antes de aplicar.'},
  INITIAL_IMMUTABLE:{title:'YTD inicial imutável',explanation:'O primeiro valor já foi registado e permanece como referência de entrada.',action:'Para um valor novo, usa a atualização do YTD corrente.'},
  INITIAL_PARTICIPANTS:{title:'Participações insuficientes',explanation:'É necessário que pelo menos dois concorrentes tenham declarado o primeiro YTD.',action:'Aguarda as declarações iniciais e reconcilia o calendário.'},
  FINAL_REQUIRED:{title:'Declaração de fecho pendente',explanation:'Antes de atualizar o YTD corrente, é necessário resolver o fecho mais antigo.',action:'Preenche a secção Declarações de fecho obrigatórias. Se o prazo terminou, aguarda o apuramento.'},
@@ -47,6 +49,8 @@ export function classifyError(error:unknown):UXError {
  const code=typeof e?.code==='string'?e.code:'';
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
+ if(code==='BL001')return errorFor('PREVIEW_CHANGED');
+ if(code==='BL002')return errorFor('LEGACY_REVIEW');
  if(code==='BE001')return errorFor('INITIAL_IMMUTABLE');
  if(code==='BE002')return errorFor('MARKET_PERIOD_REQUIRED');
  if(code==='BE003')return errorFor('INITIAL_PARTICIPANTS');

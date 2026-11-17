@@ -114,3 +114,8 @@ do mercado não coincidir com o apuramento. Não se fabrica elegibilidade histó
 
 Empate/zero, void/reversão e reconciliação de contratos legados continuam fora
 desta entrega. Não são ativados mecanismos de correção retroativa do baseline.
+
+
+## Seguimento: migração 15
+
+A [reconciliação revista de mercados legados](LEGACY_MARKET_RECONCILIATION.md) permite corrigir contratos ainda negociáveis sem histórico de negociação, com pré-visualização e auditoria. Contratos com exposição e resultados históricos são preservados. Migração apenas versionada; instalação remota pendente.

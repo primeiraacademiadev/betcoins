@@ -115,3 +115,8 @@ A [recolha de declarações finais e as penalizações locais](FINAL_DECLARATION
 ## Seguimento: migração 14
 
 O [YTD inicial e a participação efetiva](ENTRY_BASELINES.md) estão agora preparados na migração 14. Atualiza o limite histórico sobre entradas acima: períodos em curso à entrada usam o primeiro YTD; os seguintes usam o fecho anterior. Históricos e contratos não são reescritos; a instalação remota e a reconciliação legada continuam separadas.
+
+
+## Seguimento: migração 15
+
+A [reconciliação revista de mercados legados](LEGACY_MARKET_RECONCILIATION.md) permite corrigir contratos ainda negociáveis sem histórico de negociação, com pré-visualização e auditoria. Contratos com exposição e resultados históricos são preservados. Migração apenas versionada; instalação remota pendente.
