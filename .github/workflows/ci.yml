@@ -129,3 +129,12 @@ jobs:
           done
       - name: Concurrent associations, matching, entries, generation, cutoff and recurring settlement
         run: python3 tests/db/market_association_concurrency.py
+      - name: Legacy/generated collisions and immutable archive preservation on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_collision_guard.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611170003_market_collisions.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_collisions.sql
+          done
+      - name: Concurrent collision reviews, trading, entries, generation, cutoff and settlement
+        run: python3 tests/db/market_collisions_concurrency.py

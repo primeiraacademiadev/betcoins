@@ -61,3 +61,5 @@ O [YTD inicial e as entradas a meio do período](docs/ENTRY_BASELINES.md) estão
 Reconciliação de legado: [pré-visualização, auditoria e preservação de contratos](docs/LEGACY_MARKET_RECONCILIATION.md), migração 15 apenas versionada, dependente de 01–14.
 
 Associação de legado: [preparação suspensa, revisão de compatibilidade e ligação auditada às bets](docs/LEGACY_BET_ASSOCIATION.md), migração 16 apenas versionada, dependente de 01–15.
+
+Colisões: [revisão, gerado intacto substituído e preservação dos contratos](docs/MARKET_COLLISIONS.md), migração 17 apenas versionada, dependente de 01–16.

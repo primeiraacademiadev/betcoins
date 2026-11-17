@@ -85,3 +85,8 @@ bloqueado. Esta entrega não ativa a proposta antiga de anular e devolver colate
 ## Seguimento: migração 16
 
 A [associação revista às bets recorrentes](LEGACY_BET_ASSOCIATION.md) permite organizar mercados compatíveis com revisão e auditoria, alterando apenas a ligação. Atualiza o limite anterior sobre associação: colisões e fusões continuam bloqueadas. Migração apenas versionada, sem instalação remota.
+
+
+## Seguimento: migração 17
+
+O [tratamento de colisões com gerados intactos](MARKET_COLLISIONS.md) permite que um legado compatível ocupe a posição, preservando o gerado como arquivo sem negociação. Atualiza o limite anterior para esse caso: gerados com qualquer histórico de ofertas ou resultados continuam preservados e bloqueiam a substituição. Migração apenas versionada; nenhuma instalação remota.
