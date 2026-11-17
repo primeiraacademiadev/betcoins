@@ -58,6 +58,10 @@ select pg_temp.ck(jsonb_array_length(public.get_market_activity(:'market')->'eve
 select pg_temp.reject('delete from public.occurrence_classifications','42501');
 select pg_temp.ck(not has_function_privilege('authenticated','public.persist_occurrence_classification(uuid)','execute'),'Materialization is private');
 select pg_temp.ck(not has_function_privilege('authenticated','public.finalize_final_round_sources(uuid,text)','execute'),'Source-only finalization is private');
+select pg_temp.ck(not has_function_privilege('authenticated','public.create_competition_market(text,uuid,uuid,text)','execute'),'Ambiguous individual creation is retired');
+select pg_temp.ck(not has_function_privilege('authenticated','public.create_competition_market(text,uuid,uuid,text,text)','execute'),'Individual creation is outside the current recurring flow');
+select pg_temp.ck(not has_function_privilege('authenticated','public.associate_legacy_market(uuid,uuid,uuid,text,text)','execute'),'No legacy association endpoint is exposed');
+select pg_temp.ck(not has_function_privilege('authenticated','public.settle_recurring_market_core(uuid,uuid)','execute'),'Settlement cannot bypass the recurring scope guard');
 select set_config('request.jwt.claim.sub','',false);
 select pg_temp.reject(format('select public.get_market_activity(%L)',:'market'),'42501');
 select pg_temp.reject(format('select public.get_occurrence_results(%L)',:'occ'),'42501');

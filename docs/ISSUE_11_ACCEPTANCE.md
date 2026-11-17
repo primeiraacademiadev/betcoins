@@ -83,6 +83,8 @@ Migração 17: `202611170003_occurrence_results.sql`, dependente de 01–16.
 É uma evolução do esquema versionado, sem importação ou compatibilidade de legado.
 As migrações 15–16 já integradas mantêm-se no histórico de instalação; as suas
 ferramentas deixam de ser um fluxo da gestão ou um requisito de aceitação da #11.
+A migração 17 retira aos clientes os endpoints de criação individual e de
+reconciliação/associação; validação e liquidação exigem o contexto recorrente explícito.
 
 Executar CI de unitários/apresentação, build, três percursos SQL e sessões concorrentes.
 O novo percurso completo gera seis definições e 18 mercados pelo calendário real,

@@ -54,8 +54,27 @@ create function public.validate_market_classification(p_market uuid,p_note text)
 language plpgsql security definer set search_path='' as $$
 begin
  if not public.is_admin() then raise exception using errcode='42501',message='Sem permissão';end if;
+ if not exists(select 1 from public.markets where id=p_market and mode is not null and definition_id is not null and occurrence_id is not null) then
+  raise exception using errcode='BM003',message='Mercado recorrente inválido';end if;
  perform public.persist_occurrence_classification(p_market);
  return public.validate_market_classification_sources(p_market,p_note);
+end $$;
+
+-- The current application operates through recurring definitions only. Retire the
+-- old individual/reconciliation endpoints rather than interpreting ambiguous data.
+revoke all on function public.create_competition_market(text,uuid,uuid,text),public.create_competition_market(text,uuid,uuid,text,text),
+ public.preview_legacy_market(uuid,uuid,uuid,text),public.reconcile_legacy_market(uuid,uuid,uuid,text,text,text),
+ public.prepare_bet_for_association(uuid,text,text),public.preview_market_bet_association(uuid,uuid,uuid),public.associate_legacy_market(uuid,uuid,uuid,text,text)
+ from public,anon,authenticated;
+alter function public.settle_market(uuid,uuid) rename to settle_recurring_market_core;
+revoke all on function public.settle_recurring_market_core(uuid,uuid) from public,anon,authenticated;
+create function public.settle_market(p_market uuid,p_winner uuid) returns void language plpgsql security definer set search_path='' as $$
+begin
+ if not public.is_admin() then raise exception using errcode='42501',message='Sem permissão';end if;
+ perform pg_advisory_xact_lock(941003);
+ if not exists(select 1 from public.markets where id=p_market and mode is not null and definition_id is not null and occurrence_id is not null) then
+  raise exception using errcode='BM004',message='Liquidação exige um mercado recorrente explícito';end if;
+ perform public.settle_recurring_market_core(p_market,p_winner);
 end $$;
 
 create function public.get_occurrence_results(p_occurrence uuid) returns jsonb
@@ -102,6 +121,6 @@ begin
  return jsonb_build_object('events',events,'has_more',more,'next_cursor',case when more then jsonb_build_object('at',events->-1->>'at','id',events->-1->>'id') end,
   'market_state',m.state,'closes_at',m.closes_at,'resolution',resolution);
 end $$;
-revoke all on function public.persist_occurrence_classification(uuid),public.finalize_final_round(uuid,text),public.validate_market_classification(uuid,text),public.get_occurrence_results(uuid),public.get_market_activity(uuid,timestamptz,text,integer) from public,anon,authenticated;
-grant execute on function public.finalize_final_round(uuid,text),public.validate_market_classification(uuid,text),public.get_occurrence_results(uuid),public.get_market_activity(uuid,timestamptz,text,integer) to authenticated;
+revoke all on function public.persist_occurrence_classification(uuid),public.finalize_final_round(uuid,text),public.validate_market_classification(uuid,text),public.settle_market(uuid,uuid),public.get_occurrence_results(uuid),public.get_market_activity(uuid,timestamptz,text,integer) from public,anon,authenticated;
+grant execute on function public.finalize_final_round(uuid,text),public.validate_market_classification(uuid,text),public.settle_market(uuid,uuid),public.get_occurrence_results(uuid),public.get_market_activity(uuid,timestamptz,text,integer) to authenticated;
 commit;
