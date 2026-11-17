@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: npm run build
       - name: Database migration and trading smoke test
@@ -144,7 +144,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: ./node_modules/.bin/playwright install --with-deps chromium
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
@@ -152,13 +152,3 @@ jobs:
         with:
           name: occurrence-browser-failure
           path: test-results/
-  dependency_lock:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Dependency lock for review
-        run: cat package-lock.json
