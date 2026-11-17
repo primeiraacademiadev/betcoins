@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:financial": "playwright test --config playwright.financial.config.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

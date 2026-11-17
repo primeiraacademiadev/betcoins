@@ -37,6 +37,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_quality_pipeline.py -v
           python3 -m unittest discover -s tests -p test_recovery.py -v
+          python3 -m unittest discover -s tests -p test_financial_fixture.py -v
           python3 scripts/build_sql_bundles.py all
       - name: Database migration and trading smoke test
         run: |
@@ -160,4 +161,56 @@ jobs:
         if: failure()
         with:
           name: occurrence-browser-failure
+          path: test-results/
+  financial-browser:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: betcoins
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: betcoins
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
+      - name: Prepare disposable local schema and ephemeral test credentials
+        run: python3 tests/browser/financial_setup.py init
+      - name: Start real local PostgREST with a restricted gateway role
+        env:
+          PGRST_DB_URI: postgres://browser_gateway:${{ env.FINANCIAL_DB_PASSWORD }}@127.0.0.1:5432/betcoins
+          PGRST_JWT_SECRET: ${{ env.FINANCIAL_JWT_SECRET }}
+          PGRST_DB_ANON_ROLE: anon
+          PGRST_SERVER_PORT: 54322
+        run: |
+          docker run --detach --name betcoins-browser-api --network host --env PGRST_DB_URI --env PGRST_JWT_SECRET --env PGRST_DB_ANON_ROLE --env PGRST_SERVER_PORT postgrest/postgrest:v16.6
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:54322/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          docker logs betcoins-browser-api
+          exit 1
+      - name: Financial browser flows against real PostgreSQL and PostgREST
+        run: npm run test:financial
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: financial-browser-failure
           path: test-results/
