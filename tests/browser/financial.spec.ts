@@ -20,7 +20,7 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await expect(offer).toContainText('TU assumes LAY');
   await expect(offer).toContainText('Capital reservado por ti: 2 ฿');
   await confirm(taker.page,offer.getByRole('button',{name:'Aceitar',exact:true}),'A tua posição: LAY',false);
-  expect(await read(taker,'my_positions')).toHaveLength(0);
+  expect(await read(taker,'positions')).toHaveLength(0);
   await confirm(taker.page,offer.getByRole('button',{name:'Aceitar',exact:true}),'Capital reservado: 2 ฿');
   await expect(taker.page.getByText('Oferta aceite; posição criada.',{exact:true})).toBeVisible();
   await wallet(taker,998,2);
@@ -43,8 +43,10 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await expect(buyer.page.getByText('Posição comprada; titularidade e colateral transferidos.',{exact:true})).toBeVisible();
   await wallet(buyer,994,5);
   await expect(panel(buyer.page,'Resultados económicos e revendas')).toContainText('Sem resultados realizados registados.');
-  const purchased=await read(buyer,'my_positions');expect(purchased).toHaveLength(1);
+  const purchased=await read(buyer,'positions');expect(purchased).toHaveLength(1);
   expect(purchased[0]).toMatchObject({owner_id:buyer.id,side:'back',stake:5,cost_basis:6});
+  await expect(buyer.page.locator('.position')).toContainText('Custo económico: 6 ฿');
+  await expect(buyer.page.locator('.position')).toContainText('Lucro líquido potencial: 0 ฿');
   await refresh(maker);await wallet(maker,996,5);
   await expect(panel(maker.page,'Resultados económicos e revendas')).toContainText('Revenda');
   await expect(panel(maker.page,'Resultados económicos e revendas').locator('strong')).toHaveText('1 ฿');
@@ -91,13 +93,14 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await confirm(taker.page,taker.page.locator('.offer-explained').getByRole('button',{name:'Aceitar',exact:true}),'A tua posição: LAY');
   await expect(taker.page.getByRole('alert')).toContainText('Atualiza o estado da carteira ou do mercado antes de repetir');
   expect(committed).toBe(1);
+  await taker.page.getByRole('alert').getByRole('button',{name:'Fechar notificação'}).click();
   await taker.page.unroute('**/rest/v1/rpc/accept_offer');
   await refresh(taker);await wallet(taker,999,1);
-  expect(await read(taker,'my_positions')).toHaveLength(1);
+  expect(await read(taker,'positions')).toHaveLength(1);
   const entries=(await read(taker,'ledger')).length;
   expect((await rpc(taker,'accept_offer',{p_offer:offerId,p_stake:5})).ok()).toBe(false);
   expect((await read(taker,'ledger')).length).toBe(entries);
-  expect(await read(taker,'my_positions')).toHaveLength(1);await reconcile(maker);
+  expect(await read(taker,'positions')).toHaveLength(1);await reconcile(maker);
  });
 
  test(`${mode}: validate frozen result, settle once, show realized P&L and block zero`,async({browser})=>{

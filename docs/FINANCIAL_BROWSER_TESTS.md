@@ -7,6 +7,12 @@ Supabase real, HTTP, PostgREST 16.6 e PostgreSQL 16 descartáveis no CI. Todas a
 leituras e mutações financeiras passam pelas RPCs e políticas RLS reais. Não há
 implementação alternativa de saldos, ofertas, posições ou pagamentos nos testes.
 
+O ensaio identificou que a view antiga `my_positions`, criada antes da coluna de
+custo, não expunha `cost_basis`. A carteira passa a consultar `positions`, que já
+tem SELECT e RLS por titular. O navegador verifica o preço pago na revenda e o
+lucro potencial apresentado; uma compra por 6 de uma posição com payoff 6 mostra
+custo 6 e lucro potencial 0, preservando a privacidade. Não exige migração nova.
+
 Apenas a identidade de entrada é controlada: o endpoint Auth devolve os quatro
 utilizadores fictícios da fixture. JWTs são assinados com uma chave aleatória por
 job; o PostgREST valida a assinatura e assume `authenticated`, através de um
