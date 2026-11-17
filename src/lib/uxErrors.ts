@@ -5,10 +5,11 @@ export type UXErrorCode =
  | 'POSITION_UNAVAILABLE'|'APPLICATION_DECIDED'|'DUPLICATE_ACTION'
  | 'INVALID_NICKNAME'|'INVALID_DATE'|'INVALID_SELECTION'|'INVALID_PRICE'
  | 'PREVIOUS_PERIOD_REQUIRED'|'BET_PAUSED'|'FINAL_REQUIRED'|'FINAL_CLOSED'|'FINAL_ADMIN'|'INITIAL_IMMUTABLE'|'INITIAL_PARTICIPANTS'
- | 'LEGACY_REVIEW'|'PREVIEW_CHANGED'|'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
+ | 'ASSOCIATION_BLOCKED'|'LEGACY_REVIEW'|'PREVIEW_CHANGED'|'SETTLEMENT_BLOCKED'|'MARKET_PERIOD_REQUIRED'
  | 'INVALID_LOT'|'INVALID_YTD'|'NETWORK_UNCERTAIN'|'SERVICE_UNAVAILABLE'|'UNKNOWN';
 export type UXError = { code:UXErrorCode; title:string; explanation:string; action:string; field?:string };
 const catalog:Record<UXErrorCode,Omit<UXError,'code'>> = {
+ ASSOCIATION_BLOCKED:{title:'Associação bloqueada',explanation:'A ligação não é compatível, já está fixada ou a posição no calendário está ocupada.',action:'Pré-visualiza novamente e revê os motivos. Os contratos existentes mantêm-se.'},
  LEGACY_REVIEW:{title:'Mercado em revisão',explanation:'O contrato legado ou os participantes exigem reconciliação. As posições e reservas mantêm-se.',action:'Consulta a gestão. Podes cancelar ofertas não correspondidas; não há devoluções automáticas.'},
  PREVIEW_CHANGED:{title:'Revisão desatualizada',explanation:'O mercado ou as entradas mudaram desde a pré-visualização.',action:'Pré-visualiza novamente e revê as alterações antes de aplicar.'},
  INITIAL_IMMUTABLE:{title:'YTD inicial imutável',explanation:'O primeiro valor já foi registado e permanece como referência de entrada.',action:'Para um valor novo, usa a atualização do YTD corrente.'},
@@ -49,6 +50,7 @@ export function classifyError(error:unknown):UXError {
  const code=typeof e?.code==='string'?e.code:'';
  const raw=typeof e?.detailMessage==='string'?e.detailMessage:e?.message;
  const text=typeof raw==='string'?raw.toLowerCase():'';
+ if(code==='BA002'||code==='BA003')return errorFor('ASSOCIATION_BLOCKED');
  if(code==='BL001')return errorFor('PREVIEW_CHANGED');
  if(code==='BL002')return errorFor('LEGACY_REVIEW');
  if(code==='BE001')return errorFor('INITIAL_IMMUTABLE');

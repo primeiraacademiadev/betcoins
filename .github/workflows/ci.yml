@@ -120,3 +120,12 @@ jobs:
           done
       - name: Concurrent legacy reviews, trading, entry, cutoff and validated settlement
         run: python3 tests/db/legacy_markets_concurrency.py
+      - name: Metadata-only legacy association and migration preservation on all installation paths
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_association_guard.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611170002_legacy_bet_association.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_association.sql
+          done
+      - name: Concurrent associations, matching, entries, generation, cutoff and recurring settlement
+        run: python3 tests/db/market_association_concurrency.py

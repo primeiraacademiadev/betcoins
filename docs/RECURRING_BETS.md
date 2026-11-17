@@ -120,3 +120,8 @@ O [YTD inicial e a participação efetiva](ENTRY_BASELINES.md) estão agora prep
 ## Seguimento: migração 15
 
 A [reconciliação revista de mercados legados](LEGACY_MARKET_RECONCILIATION.md) permite corrigir contratos ainda negociáveis sem histórico de negociação, com pré-visualização e auditoria. Contratos com exposição e resultados históricos são preservados. Migração apenas versionada; instalação remota pendente.
+
+
+## Seguimento: migração 16
+
+A [associação revista às bets recorrentes](LEGACY_BET_ASSOCIATION.md) permite organizar mercados compatíveis com revisão e auditoria, alterando apenas a ligação. Atualiza o limite anterior sobre associação: colisões e fusões continuam bloqueadas. Migração apenas versionada, sem instalação remota.
