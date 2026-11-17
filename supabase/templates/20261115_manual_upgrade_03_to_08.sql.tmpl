@@ -1,0 +1,77 @@
+-- BetCoins - manual upgrade, existing Supabase project, 2026-11-15
+-- Applies migrations 03 through 08 ONLY. Never use on a fresh/empty database.
+-- Intended for Supabase SQL Editor; paste and run the ENTIRE file once.
+-- Do NOT run the 20261115 baseline or migrations 01/02 here.
+-- All statements execute in ONE PostgreSQL transaction.
+-- If an error occurs, nothing from this script is committed.
+-- Source files are copied verbatim from the repository's main branch.
+
+BEGIN;
+
+DO $preflight$
+BEGIN
+ IF to_regclass('public.wallets') IS NULL
+   OR to_regclass('public.ledger') IS NULL
+   OR to_regclass('public.positions') IS NULL
+   OR to_regclass('public.sprints') IS NULL
+   OR to_regclass('public.sprint_scores') IS NULL
+   OR to_regprocedure('public.get_sprint_rankings(uuid)') IS NULL
+ THEN
+  RAISE EXCEPTION 'Preflight: schema base ou sprints em falta; não aplicar upgrade incremental';
+ END IF;
+ IF EXISTS (SELECT 1 FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='positions' AND column_name='cost_basis')
+  OR to_regclass('public.position_sales') IS NOT NULL
+  OR to_regprocedure('public.reconcile_wallets()') IS NOT NULL
+  OR to_regprocedure('public.get_spectator_rankings(timestamptz)') IS NOT NULL
+  OR to_regprocedure('public.list_position(uuid,numeric,integer)') IS NOT NULL
+  OR to_regclass('public.position_settlements') IS NOT NULL
+ THEN
+  RAISE EXCEPTION 'Preflight: atualização já iniciada/aplicada; rever estado antes de repetir';
+ END IF;
+END
+$preflight$;
+
+-- >>> MIGRATION 3: 202611140001_sprint_delta.sql
+{{source:202611140001_sprint_delta.sql}}
+-- <<< END MIGRATION 3
+
+-- >>> MIGRATION 4: 202611140002_position_cost_basis.sql
+{{source:202611140002_position_cost_basis.sql}}
+-- <<< END MIGRATION 4
+
+-- >>> MIGRATION 5: 202611150001_wallet_reconciliation.sql
+{{source:202611150001_wallet_reconciliation.sql}}
+-- <<< END MIGRATION 5
+
+-- >>> MIGRATION 6: 202611150002_spectator_rankings.sql
+{{source:202611150002_spectator_rankings.sql}}
+-- <<< END MIGRATION 6
+
+-- >>> MIGRATION 7: 202611150003_partial_resale.sql
+{{source:202611150003_partial_resale.sql}}
+-- <<< END MIGRATION 7
+
+-- >>> MIGRATION 8: 202611150004_position_settlement_pnl.sql
+{{source:202611150004_position_settlement_pnl.sql}}
+-- <<< END MIGRATION 8
+
+DO $postflight$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+  WHERE table_schema='public' AND table_name='positions' AND column_name='cost_basis')
+ OR to_regclass('public.position_sales') IS NULL
+ OR to_regprocedure('public.reconcile_wallets()') IS NULL
+ OR to_regprocedure('public.get_spectator_rankings(timestamptz)') IS NULL
+ OR to_regprocedure('public.list_position(uuid,numeric,integer)') IS NULL
+ OR to_regclass('public.position_settlements') IS NULL
+ THEN RAISE EXCEPTION 'Postflight: um dos objetos das migrações 04-08 está ausente'; END IF;
+ IF position('round(b.ytd-a.ytd,4)' IN
+    pg_get_functiondef('public.get_sprint_rankings(uuid)'::regprocedure))=0
+ THEN RAISE EXCEPTION 'Postflight: cálculo ΔYTD ainda não está corrigido'; END IF;
+END
+$postflight$;
+
+COMMIT;
+
+SELECT 'OK - BetCoins 03..08 aplicadas' AS resultado;
