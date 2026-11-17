@@ -80,3 +80,8 @@ A autorização de implementar as declarações finais e penalizações da #11 a
 ## 9. Participação efetiva e entrada a meio do período — migração 14
 
 A autorização para implementar o baseline inicial da #11 separa admissão e participação efetiva, que começa na primeira declaração YTD auditada por campeonato. Esse valor é imutável. Nos períodos em curso à entrada, o delta usa o YTD inicial e mostra a janela parcial; nos seguintes, usa o original do fecho anterior. O valor absoluto mantém o critério de fecho. Não há zeros por omissão, retroatividade, propagação de penalizações ou implementação de empate/zero. Ver [regras, testes e limites](ENTRY_BASELINES.md). Migração apenas versionada; Supabase remoto não migrado.
+
+
+## Âmbito atualizado da #11 — 17/11/2026
+
+Não existe obrigação de compatibilidade ou reconciliação de legado; dados exclusivamente de teste não conformes podem ser removidos numa operação identificada. A aceitação incide no modelo recorrente atual e nas duas modalidades, com [matriz e testes](ISSUE_11_ACCEPTANCE.md). Os resultados finais por ocorrência são persistidos pela migração 17; histórico e rankings não usam YTD corrente como substituto de fontes ausentes. Empate/zero permanece bloqueado, sem anulação/devolução automática. Supabase remoto não migrado.

@@ -82,10 +82,3 @@ describe('associação imutável a bets',()=>{
   expect(classifyError({code:'BA003'}).code).toBe('ASSOCIATION_BLOCKED');
  });
 });
-
-describe('colisões e arquivos substituídos',()=>{
- it('distingue um contrato preservado de um arquivo sem negociação',()=>{
-  expect(classifyError({code:'BK002'}).code).toBe('COLLISION_BLOCKED');
-  expect(classifyError({code:'BK003'}).code).toBe('MARKET_REPLACED');
- });
-});

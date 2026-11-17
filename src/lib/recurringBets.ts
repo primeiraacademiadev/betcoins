@@ -9,12 +9,11 @@ export function occurrenceStatus(o:BetOccurrence,markets:Market[],now=Date.now()
  return Date.parse(o.starts_at)>now?'Futura':'Em curso';
 }
 export function marketsForOccurrence(markets:Market[],definition:string,occurrence:string):Market[]{
- markets=markets.filter(m=>!m.replaced_by_market_id);
- if(!definition)return markets.filter(m=>!m.definition_id);
+ if(!definition)return [];
  return markets.filter(m=>m.definition_id===definition&&m.occurrence_id===occurrence);
 }
 export function marketTradingBlocked(market:Market|undefined,definitions:BetDefinition[],now=Date.now()):boolean {
- if(!market||market.replaced_by_market_id||market.state!=='open'||Date.parse(market.closes_at)<=now)return true;
+ if(!market||market.state!=='open'||Date.parse(market.closes_at)<=now)return true;
  return definitions.some(d=>d.id===market.definition_id&&!d.active);
 }
 

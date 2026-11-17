@@ -10,7 +10,7 @@ describe('snapshot market modes',()=>{
  it('labels explicit criteria without deriving them from weekly/annual kind',()=>{
   expect(modeLabel('snapshot_value','weekly')).toContain('fecho (%)');
   expect(modeLabel('snapshot_delta_previous','annual')).toContain('período anterior (pp)');
-  expect(modeLabel(null,'weekly')).toContain('Legado');
+  expect(modeLabel(null,'weekly')).toContain('indisponível');
  });
  it('shows both end snapshots, 12 to 16.5 as 4.5 pp and validation',()=>{
   const html=renderToStaticMarkup(<ClassificationDetails review={base}/>);

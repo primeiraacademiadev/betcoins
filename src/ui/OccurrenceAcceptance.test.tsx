@@ -1,0 +1,15 @@
+import {describe,it,expect} from 'vitest';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {ActivityDetails} from './MarketActivity';
+import {OccurrenceResultsDetails,type OccurrenceResult} from './OccurrenceResults';
+import {ClassificationDetails} from './MarketSettlement';
+import type {MarketClassification} from '../lib/marketModes';
+const rows=[{competitor_id:'a',nickname:'A',value:18,end_ytd:18,previous_ytd:15,place:1,status:'complete'},{competitor_id:'b',nickname:'B',value:16,end_ytd:16,previous_ytd:12,place:2,status:'complete'}];
+const review:MarketClassification={status:'validated',mode:'snapshot_value',unit:'%',rows,can_validate:false,current_capture:{id:'cap',cutoff_at:'2026-11-20T21:00Z'},previous_capture:null,validation:{id:'v',note:'Revisão imutável',validated_at:'2026-11-21T10:00Z'}};
+describe('remaining #11 acceptance presentation',()=>{
+ it('shows cancelled offers and executed trades without reconstructing the original offer quantity',()=>{const h=renderToStaticMarkup(<ActivityDetails resolution={null} events={[{id:'offer:f',at:'2026-11-17T12:00Z',kind:'offer',label:'A',side:'back',odds:2,stake:null,liability:null,state:'cancelled',stake_remaining:0},{id:'trade:t',at:'2026-11-17T12:01Z',kind:'trade',label:'A',side:null,odds:2,stake:5,liability:5,state:null,stake_remaining:null}]}/>);expect(h).toContain('Estado atual: cancelada');expect(h).toContain('Quantidade ainda disponível: 0');expect(h).toContain('Transação executada');expect(h).not.toContain('Stake original');});
+ it('shows the settled outcome and settlement date as read-only information',()=>{const h=renderToStaticMarkup(<ActivityDetails events={[]} resolution={{status:'settled',winner:'B',resolved_at:'2026-11-21T10:30Z'}}/>);expect(h).toContain('Liquidado em');expect(h).toContain('Resultado final: <strong>B</strong>');expect(h).not.toContain('<button');});
+ it('identifies the position of the specific market and the validation date',()=>{const h=renderToStaticMarkup(<ClassificationDetails review={review} category="second"/>);expect(h).toContain('2 · B<small class="target-label">Posição desta aposta');expect(h).toContain('Validação em');expect((h.match(/target-label/g)||[])).toHaveLength(1);});
+ it('keeps pending occurrence statistics distinct from frozen and validated results',()=>{const pending:OccurrenceResult={id:null,mode:'snapshot_delta_previous',unit:'pp',status:'waiting_final_results',rows:[],recorded_at:null};const h=renderToStaticMarkup(<OccurrenceResultsDetails results={[pending]}/>);expect(h).toContain('Dados finais indisponíveis / por apurar');expect(h).not.toContain('0.0000');});
+ it('shows both immutable modalities with their own units and sources',()=>{const frozen:OccurrenceResult={id:'s',mode:'snapshot_value',unit:'%',status:'frozen',rows,recorded_at:'2026-11-20T21:30Z'};const h=renderToStaticMarkup(<OccurrenceResultsDetails results={[frozen,{...frozen,id:'d',mode:'snapshot_delta_previous',unit:'pp',rows:rows.map(r=>({...r,value:r.end_ytd-r.previous_ytd}))}]}/>);expect(h).toContain('18.0000 %');expect(h).toContain('4.0000 pp');expect(h).toContain('A validação e a liquidação são operações separadas');});
+});

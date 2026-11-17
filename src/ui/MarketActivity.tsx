@@ -1,0 +1,15 @@
+import {useEffect,useRef,useState} from 'react';
+import {rpc} from '../lib/supabase';
+import {observeRequest} from '../lib/competition';
+import {formatCoins} from '../lib/domain';
+import type {ActivityEvent,ActivityPage} from '../lib/marketResults';
+export function ActivityDetails({events,resolution}:{events:ActivityEvent[];resolution:ActivityPage['resolution']}){
+ return <>{resolution&&<p className="footnote">Liquidado em {new Date(resolution.resolved_at).toLocaleString('pt-PT')} · Resultado final: <strong>{resolution.winner}</strong>.</p>}{!events.length&&<p>Sem ofertas ou transações registadas neste mercado.</p>}{events.map(e=><div className="activity-row" key={e.id}><div><strong>{e.kind==='trade'?'Transação executada':'Oferta criada'} · {e.label}</strong><small>{new Date(e.at).toLocaleString('pt-PT')} · Odd {Number(e.odds).toFixed(2)}</small></div><div>{e.kind==='trade'?<span>Stake {formatCoins(Number(e.stake))} ฿ · Responsabilidade {formatCoins(Number(e.liability))} ฿</span>:<span>{e.side?.toUpperCase()} · Estado atual: {e.state==='cancelled'?'cancelada':e.state==='filled'?'preenchida':'aberta'} · Quantidade ainda disponível: {e.stake_remaining} ฿</span>}</div></div>)}</>;
+}
+export function MarketActivity({marketId,revision}:{marketId:string;revision?:unknown}){
+ const epoch=useRef(0);
+ const [data,setData]=useState<ActivityPage|null>(null),[events,setEvents]=useState<ActivityEvent[]>([]),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[refresh,setRefresh]=useState(0);
+ useEffect(()=>{epoch.current++;setData(null);setEvents([]);setFailed(false);setBusy(false);return observeRequest(rpc<ActivityPage>('get_market_activity',{p_market:marketId}),page=>{setData(page);setEvents(page.events)},()=>setFailed(true))},[marketId,revision,refresh]);
+ async function older(){if(!data?.next_cursor)return;const requestEpoch=epoch.current;setBusy(true);setFailed(false);try{const p=await rpc<ActivityPage>('get_market_activity',{p_market:marketId,p_before:data.next_cursor.at,p_before_id:data.next_cursor.id});if(requestEpoch!==epoch.current)return;setData(p);setEvents(old=>[...old,...p.events.filter(e=>!old.some(x=>x.id===e.id))]);}catch{if(requestEpoch===epoch.current)setFailed(true)}finally{if(requestEpoch===epoch.current)setBusy(false)}}
+ return <section className="panel"><h2>Histórico de ofertas e transações</h2><p className="footnote">Consulta em leitura, incluindo ofertas canceladas e preenchidas. O estado e a quantidade disponível das ofertas são os atuais; não reconstituem uma quantidade original desconhecida.</p>{failed&&<p role="alert">Não foi possível consultar o histórico. Atualiza para tentar novamente.</p>}{data?<ActivityDetails events={events} resolution={data.resolution}/>:!failed&&<p role="status">A consultar o histórico…</p>}<button className="button secondary" disabled={busy} onClick={()=>setRefresh(x=>x+1)}>Atualizar histórico</button>{data?.has_more&&<button className="button secondary" disabled={busy} onClick={()=>void older()}>Ver registos anteriores</button>}</section>;
+}

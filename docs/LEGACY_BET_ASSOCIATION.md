@@ -89,8 +89,3 @@ liquidação idempotente e empate bloqueado com posições/reservas preservadas.
 **Empate/zero continua bloqueado**: sem void, devoluções, fusões ou tesouraria.
 A #11 permanece aberta para colisões que exijam escolha/fusão de contratos e
 legados incompatíveis/com exposição cuja transformação requeira decisão própria.
-
-
-## Seguimento: migração 17
-
-O [tratamento de colisões com gerados intactos](MARKET_COLLISIONS.md) permite que um legado compatível ocupe a posição, preservando o gerado como arquivo sem negociação. Atualiza o limite anterior para esse caso: gerados com qualquer histórico de ofertas ou resultados continuam preservados e bloqueiam a substituição. Migração apenas versionada; nenhuma instalação remota.

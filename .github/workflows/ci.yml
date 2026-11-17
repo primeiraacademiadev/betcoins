@@ -129,12 +129,26 @@ jobs:
           done
       - name: Concurrent associations, matching, entries, generation, cutoff and recurring settlement
         run: python3 tests/db/market_association_concurrency.py
-      - name: Legacy/generated collisions and immutable archive preservation on all installation paths
+      - name: Issue 11 current-model acceptance and immutable occurrence results
         run: |
           for db in betcoins betcoins_baseline betcoins_upgrade; do
-            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_collision_guard.sql
-            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611170003_market_collisions.sql
-            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/market_collisions.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611170003_occurrence_results.sql
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f tests/db/issue_11_acceptance.sql
           done
-      - name: Concurrent collision reviews, trading, entries, generation, cutoff and settlement
-        run: python3 tests/db/market_collisions_concurrency.py
+      - name: Complete recurring acceptance with concurrent closing, validation and settlement
+        run: python3 tests/db/issue_11_acceptance_concurrency.py
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: occurrence-browser-failure
+          path: test-results/

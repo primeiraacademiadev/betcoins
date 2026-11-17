@@ -62,4 +62,4 @@ Reconciliação de legado: [pré-visualização, auditoria e preservação de co
 
 Associação de legado: [preparação suspensa, revisão de compatibilidade e ligação auditada às bets](docs/LEGACY_BET_ASSOCIATION.md), migração 16 apenas versionada, dependente de 01–15.
 
-Colisões: [revisão, gerado intacto substituído e preservação dos contratos](docs/MARKET_COLLISIONS.md), migração 17 apenas versionada, dependente de 01–16.
+#11: [matriz de aceitação do modelo atual e evidência dos 30 critérios](docs/ISSUE_11_ACCEPTANCE.md). Migração 17 de estatísticas/histórico apenas versionada, sem Supabase remoto. Compatibilidade legada não exigida.
