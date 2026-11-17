@@ -1,5 +1,6 @@
 """Backup/restore rehearsal for the disposable CI cluster, never for Supabase."""
 import hashlib
+import difflib
 import os
 from pathlib import Path
 import re
@@ -52,11 +53,11 @@ def check_versions(env):
             raise RuntimeError(f'{client} must match PostgreSQL server major {server_major}')
 
 
-def schema_digest(database, env):
+def schema_snapshot(database, env):
     schema = run(['pg_dump', '--schema-only', '--no-owner', '-d', database], env)
     # Recent pg_dump versions generate a new psql restriction key per export.
     schema = re.sub(r'^\\(?:un)?restrict .*\n?', '', schema, flags=re.M)
-    return hashlib.sha256(schema.encode()).hexdigest()
+    return schema
 
 
 def contents(database, env):
@@ -76,7 +77,7 @@ def main():
     if query('postgres', f"select count(*) from pg_database where datname='{TARGET}'", env) != '0':
         raise RuntimeError('Recovery target already exists; no database was overwritten')
     check_versions(env)
-    before_schema = schema_digest(SOURCE, env)
+    before_schema = schema_snapshot(SOURCE, env)
     before_rows = contents(SOURCE, env)
     if not before_rows or not query(SOURCE, 'select count(*) from public.trades', env).isdigit():
         raise RuntimeError('Missing application fixtures')
@@ -89,8 +90,17 @@ def main():
         # Restore ACLs, policies, triggers and functions as well as all data.
         run(['pg_restore', '--exit-on-error', '--single-transaction', '--no-owner',
              '-d', TARGET, archive], env)
-    if before_schema != schema_digest(TARGET, env) or before_rows != contents(TARGET, env):
-        raise RuntimeError('Restore differs from the original schema or table contents')
+    after_schema = schema_snapshot(TARGET, env)
+    after_rows = contents(TARGET, env)
+    if before_schema != after_schema:
+        # Schema definitions are repository code; never print table row contents.
+        print(''.join(list(difflib.unified_diff(before_schema.splitlines(True),
+                                              after_schema.splitlines(True)))[:100]), flush=True)
+        raise RuntimeError('Restored schema differs from the original')
+    if before_rows != after_rows:
+        changed = sorted(k for k in before_rows.keys() | after_rows.keys()
+                         if before_rows.get(k) != after_rows.get(k))
+        raise RuntimeError('Restored table contents differ: ' + ', '.join(changed))
     run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', TARGET,
          '-f', str(ROOT / 'tests/db/recovery_checks.sql')], env)
     # Re-run the real current-model authorization/market acceptance on the copy.
