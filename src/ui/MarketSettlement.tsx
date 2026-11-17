@@ -1,3 +1,4 @@
+import {EntryReferenceDetails} from './EntryBaselines';
 import {ScoreAuditDetails} from './FinalDeclarations';
 import {useEffect,useState} from 'react';
 import type {Market} from '../lib/domain';
@@ -30,7 +31,7 @@ export function ClassificationDetails({review}:{review:MarketClassification}){
  return <><p className="footnote">{review.validation?'Classificação validada e imutável':'Classificação por validar'} · {modeLabel(review.mode)}</p>
   {review.current_capture&&<p className="footnote">Fecho atual: {new Date(review.current_capture.cutoff_at).toLocaleString('pt-PT')}</p>}
   {review.previous_capture&&<p className="footnote">Fecho anterior: {new Date(review.previous_capture.cutoff_at).toLocaleString('pt-PT')}</p>}
-  {review.rows.map(row=><div className="rank-row" key={row.competitor_id}><span>{row.place??'—'} · {row.nickname}<small className="movement-date">Fecho: {row.end_ytd===null?'sem declaração':row.end_ytd+'%'}{review.mode==='snapshot_delta_previous'&&' · Anterior: '+(row.previous_ytd===null?'sem declaração':row.previous_ytd+'%')}</small><ScoreAuditDetails row={row}/></span><strong>{row.status==='complete'&&row.value!==null?Number(row.value).toFixed(4)+' '+review.unit:'Sem dados para apuramento'}</strong></div>)}
+  {review.rows.map(row=><div className="rank-row" key={row.competitor_id}><span>{row.place??'—'} · {row.nickname}<small className="movement-date">Fecho: {row.end_ytd===null?'sem declaração':row.end_ytd+'%'}{review.mode==='snapshot_delta_previous'&&' · Referência: '+(row.previous_ytd===null?'sem declaração':row.previous_ytd+'%')}</small><ScoreAuditDetails row={row}/><EntryReferenceDetails row={row}/></span><strong>{row.status==='complete'&&row.value!==null?Number(row.value).toFixed(4)+' '+review.unit:'Sem dados para apuramento'}</strong></div>)}
   {review.validation&&<p className="footnote">Nota de validação: {review.validation.note}</p>}</>;
 }
 export function MarketSettlement({market,outcomeLabels,busy,onSettle,onValidate}:{market:Market;outcomeLabels:Record<string,string>;busy:boolean;onSettle:(winner:string)=>void;onValidate?:(note:string)=>Promise<void>}){
