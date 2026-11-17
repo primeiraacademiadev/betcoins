@@ -1,5 +1,12 @@
 # Operação de campeonato e sprints — migração 09
 
+> Nota histórica da entrega 09. Para o modelo atual até à migração 17, declarações
+> finais e penalizações, consultar a [aceitação #11](ISSUE_11_ACCEPTANCE.md).
+> Para backups, restauro, incidentes e quotas, usar o
+> [procedimento atual de recuperação](OPERATIONS_RECOVERY.md).
+> As limitações antigas de modalidades e a consulta legada abaixo não definem o
+> produto atual. Empate/zero continua bloqueado; nenhuma migração remota é automática.
+
 ## Estado de entrega
 
 O código e o CI podem ser integrados sem aplicar SQL ao Supabase remoto. O deploy GitHub Pages publica apenas o frontend. **Não existe aplicação automática da migração 09.** Até à instalação manual, a interface apresenta o novo apuramento como indisponível e permite consultar os rankings antigos, sem certificar a sua proveniência.

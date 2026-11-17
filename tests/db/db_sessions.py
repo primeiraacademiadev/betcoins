@@ -24,11 +24,13 @@ def user(who, command):
     return f"set role authenticated; select set_config('request.jwt.claim.sub','{who}',false); {command}"
 
 
-def race(commands, cross_cutoff=None, lock=941003):
+def race(commands, cross_cutoff=None, lock=941003, hold_sql=None):
     holder = subprocess.Popen(['psql', '-X', '-At', '-v', 'ON_ERROR_STOP=1'],
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        holder.stdin.write(f'begin; select pg_advisory_xact_lock({lock});\n\\echo LOCKED\n')
+        wait_condition = "wait_event_type='Lock'" if hold_sql else "wait_event='advisory'"
+        hold_sql = hold_sql or f'select pg_advisory_xact_lock({lock});'
+        holder.stdin.write(f'begin; {hold_sql}\n\\echo LOCKED\n')
         holder.stdin.flush()
         while holder.stdout.readline().strip() != 'LOCKED':
             if holder.poll() is not None:
@@ -36,7 +38,7 @@ def race(commands, cross_cutoff=None, lock=941003):
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(commands)) as pool:
             futures = [pool.submit(sql, command, f'db-racer-{i}', False) for i, command in enumerate(commands)]
             deadline = time.monotonic() + 10
-            while value("select count(*) from pg_stat_activity where application_name like 'db-racer-%' and wait_event='advisory'") != str(len(commands)):
+            while value(f"select count(*) from pg_stat_activity where application_name like 'db-racer-%' and {wait_condition}") != str(len(commands)):
                 if time.monotonic() > deadline:
                     raise AssertionError('Contenders did not all reach the trading mutex')
                 time.sleep(.05)

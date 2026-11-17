@@ -4,7 +4,7 @@ on:
   pull_request:
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -36,6 +36,7 @@ jobs:
       - name: Frozen SQL exports and dependency-install policy
         run: |
           python3 -m unittest discover -s tests -p test_quality_pipeline.py -v
+          python3 -m unittest discover -s tests -p test_recovery.py -v
           python3 scripts/build_sql_bundles.py all
       - name: Database migration and trading smoke test
         run: |
@@ -141,6 +142,10 @@ jobs:
           done
       - name: Complete recurring acceptance with concurrent closing, validation and settlement
         run: python3 tests/db/issue_11_acceptance_concurrency.py
+      - name: Overlapping weekly credits and ledger reconciliation
+        run: python3 tests/db/operations_concurrency.py
+      - name: Restore populated database and verify data, permissions and current-model acceptance
+        run: python3 tests/db/recovery.py
   browser:
     runs-on: ubuntu-24.04
     steps:
