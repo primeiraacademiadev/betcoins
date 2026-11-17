@@ -65,3 +65,5 @@ Associação de legado: [preparação suspensa, revisão de compatibilidade e li
 #11: [matriz de aceitação do modelo atual e evidência dos 30 critérios](docs/ISSUE_11_ACCEPTANCE.md). Migração 17 de estatísticas/histórico apenas versionada, sem Supabase remoto. Compatibilidade legada não exigida.
 
 Qualidade: [instalação de dependências com lock, exports SQL gerados e âmbito do Sonar](docs/SONAR_QUALITY.md). Gerar exports não aplica migrações.
+
+Operação #8: [matriz de aceitação](docs/ISSUE_8_ACCEPTANCE.md) e [backup, recuperação e quotas](docs/OPERATIONS_RECOVERY.md). O CI ensaia restauro numa base local descartável; não altera o Supabase remoto nem certifica uma recuperação completa dos serviços Auth/Storage.
