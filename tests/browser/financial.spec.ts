@@ -53,8 +53,8 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await publish(maker,fixture.trading,'lay');
   await market(taker,fixture.trading);await refresh(taker);
   offer=taker.page.locator('.offer-explained');
-  await offer.getByRole('spinbutton').fill('5');
   await expect(offer).toContainText('TU assumes BACK');
+  await offer.getByRole('spinbutton').fill('5');
   await expect(offer).toContainText('Capital reservado por ti: 5 ฿');
   await confirm(taker.page,offer.getByRole('button',{name:'Aceitar',exact:true}),'A tua posição: BACK');
   await expect(taker.page.getByText('Oferta aceite; posição criada.',{exact:true})).toBeVisible();

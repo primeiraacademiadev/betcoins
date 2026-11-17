@@ -60,7 +60,7 @@ def seed(scenario, mode, env):
     for group in groups:
         duration = '12 seconds' if scenario == 'settlement' else '1 day'
         champ = sql(f"insert into public.championships(name,starts_at,ends_at) values('Browser financial',clock_timestamp()-interval '1 day',clock_timestamp()+interval '{duration}') returning id", env)
-        for who, score in zip(ACTORS[:3], (12, 15, 0) if group != 'tie' else (12, 12, 0)):
+        for who, score in zip(ACTORS[:3], (12, 15, 0)):
             as_user(who, f"select public.declare_initial_ytd('{champ}',{score});", env)
         as_user(a, f"select public.configure_recurring_bet('{champ}','annual','{mode}',true);", env)
         sql(f"update public.markets set title='Browser {group} '||category where championship_id='{champ}'", env)
@@ -79,7 +79,8 @@ def seed(scenario, mode, env):
                     raise RuntimeError('Financial fixture did not reach its cutoff')
                 time.sleep(.1)
             round_id = as_user(a, f"select x->>'id' from jsonb_array_elements(public.get_my_final_declarations()) x where x->>'championship_id'='{champ}';", env)
-            for who, score in zip(ACTORS[:3], (16, 18, 3) if group == 'ready' else (20, 20, 3)):
+            finals = (16, 18, 3) if group == 'ready' else ((20, 20, 3) if mode == 'snapshot_value' else (20, 23, 3))
+            for who, score in zip(ACTORS[:3], finals):
                 as_user(who, f"select public.declare_final_score('{round_id}',{score});", env)
             as_user(a, f"select public.finalize_final_round('{round_id}','Fecho preparado para validar e liquidar no navegador');", env)
     return result
