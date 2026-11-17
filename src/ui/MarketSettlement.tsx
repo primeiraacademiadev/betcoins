@@ -12,7 +12,7 @@ export function resolutionMessage(status:string):string {
  const messages:Record<string,string>={
   ready:'Classificação validada. O resultado é determinado pelos dados congelados.',
   settled:'Mercado liquidado.',
-  unlinked:'Mercado antigo sem período associado. A liquidação exige reconciliação própria.',
+  unlinked:'Mercado sem período válido. Usa os mercados das bets recorrentes.',
   awaiting_validation:'Aguarda captura e validação final da classificação.',
   waiting_current_snapshot:'Aguarda o snapshot de fecho deste período.',
   waiting_previous_snapshot:'Aguarda o snapshot de fecho do período anterior. Não se assume zero nem se usa o início do sprint.',
@@ -26,7 +26,7 @@ export function resolutionMessage(status:string):string {
 export function ResolutionDetails({result,winner}:{result:Resolution;winner?:string}){
  return <><p className="footnote" role="status">{resolutionMessage(result.status)}</p>
   {result.status==='ready'&&<p>Resultado validado: <strong>{winner}</strong></p>}
-  {result.criterion&&<p className="footnote">Critério: {modeLabel(result.criterion,result.criterion==='annual_ytd'?'annual':undefined)}.</p>}</>;
+  {result.criterion&&<p className="footnote">Critério: {modeLabel(result.criterion)}.</p>}</>;
 }
 export function ClassificationDetails({review,category}:{review:MarketClassification;category?:MarketCategory}){
  const highlighted=highlightedCompetitors(review.rows,category);
