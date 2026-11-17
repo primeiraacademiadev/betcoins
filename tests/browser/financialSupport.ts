@@ -77,8 +77,8 @@ export async function confirm(page:Page,button:Locator,contains:string,accept=tr
 export async function publish(who:Actor,fixture:MarketFixture,side:'back'|'lay',stake=10){
  await market(who,fixture);
  const form=panel(who.page,'Colocar oferta');
- await form.getByLabel('Resultado',{exact:true}).selectOption(fixture.outcome);
- await form.getByLabel('Posição',{exact:true}).selectOption(side);
+ await form.getByRole('combobox',{name:/^Resultado/}).selectOption(fixture.outcome);
+ await form.getByRole('combobox',{name:/^Posição/}).selectOption(side);
  await form.getByLabel('Odd decimal').fill('1.20');
  await form.getByLabel('Stake (฿)',{exact:true}).fill(String(stake));
  await confirm(who.page,form.getByRole('button',{name:'Publicar oferta'}),'Publicar oferta '+side.toUpperCase());

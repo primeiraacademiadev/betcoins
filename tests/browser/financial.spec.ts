@@ -10,6 +10,8 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   const taker=await actor(browser,fixture.actors[1],'Bruno');
   const buyer=await actor(browser,fixture.actors[3],'Duarte');
   await publish(maker,fixture.trading,'back',20);
+  const ownOffer=(await read(maker,'offers'))[0].id;
+  expect((await rpc(maker,'accept_offer',{p_offer:ownOffer,p_stake:10})).ok()).toBe(false);
   await expect(panel(maker.page,'Livro de ofertas').getByRole('button',{name:'Aceitar',exact:true})).toHaveCount(0);
   await wallet(maker,980,20);
   await market(taker,fixture.trading);await refresh(taker);
@@ -40,6 +42,7 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await confirm(buyer.page,secondary.getByRole('button',{name:'Comprar',exact:true}),'por 6 ฿');
   await expect(buyer.page.getByText('Posição comprada; titularidade e colateral transferidos.',{exact:true})).toBeVisible();
   await wallet(buyer,994,5);
+  await expect(panel(buyer.page,'Resultados económicos e revendas')).toContainText('Sem resultados realizados registados.');
   const purchased=await read(buyer,'my_positions');expect(purchased).toHaveLength(1);
   expect(purchased[0]).toMatchObject({owner_id:buyer.id,side:'back',stake:5,cost_basis:6});
   await refresh(maker);await wallet(maker,996,5);
@@ -60,7 +63,7 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   await market(maker,fixture.trading);
   const form=panel(maker.page,'Colocar oferta');
   await form.getByLabel('Stake (฿)',{exact:true}).fill('100000');
-  await form.getByLabel('Posição',{exact:true}).selectOption('back');
+  await form.getByRole('combobox',{name:/^Posição/}).selectOption('back');
   await expect(form.getByRole('button',{name:'Publicar oferta'})).toBeDisabled();
   const before=await (await rpc(maker,'get_wallet')).json();
   const denied=await rpc(maker,'place_offer',{p_outcome:fixture.trading.outcome,p_side:'back',p_odds:2,p_stake:100000});
