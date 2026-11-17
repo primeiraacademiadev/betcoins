@@ -59,6 +59,23 @@ class RecoveryGuards(unittest.TestCase):
                         with self.assertRaisesRegex(RuntimeError, 'must match PostgreSQL server major 16'):
                             recovery.check_versions({})
 
+    def test_schema_comparison_normalizes_only_ephemeral_metadata(self):
+        template = ('\\restrict {key}\nCREATE TABLE public.wallets(id uuid);\n'
+                    'ALTER TABLE ONLY public.wallets ALTER COLUMN id SET (pg_attver={version});\n'
+                    'ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;\n'
+                    'GRANT SELECT ON public.wallets TO authenticated;\n\\unrestrict {key}\n')
+        original = template.format(key='first', version=123)
+        restored = template.format(key='second', version=456)
+        expected = recovery.normalize_schema(original)
+        self.assertEqual(expected, recovery.normalize_schema(restored))
+        for changed in [restored.replace('ENABLE ROW LEVEL SECURITY', 'DISABLE ROW LEVEL SECURITY'),
+                        restored.replace('GRANT SELECT', 'GRANT ALL'),
+                        restored.replace('ALTER COLUMN id', 'ALTER COLUMN other'),
+                        restored.replace('(pg_attver=456)', '(n_distinct=456)'),
+                        restored.replace('id uuid', 'id text')]:
+            with self.subTest(changed=changed):
+                self.assertNotEqual(expected, recovery.normalize_schema(changed))
+
 
 if __name__ == '__main__':
     unittest.main()

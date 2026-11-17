@@ -28,6 +28,10 @@ Depois de todas as migrações e dos testes concorrentes, `tests/db/recovery.py`
    políticas RLS, constraints, triggers e dados. Os papéis já existem no cluster CI.
 3. Compara o esquema completo e a contagem/digest de todas as tabelas public/auth,
    incluindo ledger, titulares/custos, reservas, transações, declarações e resultados.
+   A comparação normaliza apenas a chave aleatória de restrição do psql e o valor
+   interno `pg_attver`, regenerado no restauro. Mantém as definições de colunas,
+   permissões, políticas, funções e todos os dados na comparação; ver a
+   [documentação PostgreSQL de attoptions](https://www.postgresql.org/docs/16/catalog-pg-attribute.html).
 4. Reconcilia cada carteira com o ledger, conserva a moeda emitida e rejeita saldos
    negativos. Confirma isolamento de carteiras e recusa de escrita financeira.
 5. Repete a aceitação do modelo recorrente na cópia, dentro de transações revertidas;

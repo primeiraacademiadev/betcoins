@@ -1,5 +1,4 @@
 """Backup/restore rehearsal for the disposable CI cluster, never for Supabase."""
-import hashlib
 import difflib
 import os
 from pathlib import Path
@@ -53,11 +52,19 @@ def check_versions(env):
             raise RuntimeError(f'{client} must match PostgreSQL server major {server_major}')
 
 
-def schema_snapshot(database, env):
-    schema = run(['pg_dump', '--schema-only', '--no-owner', '-d', database], env)
+def normalize_schema(schema):
     # Recent pg_dump versions generate a new psql restriction key per export.
     schema = re.sub(r'^\\(?:un)?restrict .*\n?', '', schema, flags=re.M)
+    # PostgreSQL 16.16 assigns internal attribute versions independently on
+    # restore. Older 16.x clients emit them as ignored ALTER COLUMN options.
+    # Preserve the statement/object identity, replacing only that internal value.
+    schema = re.sub(r'^(ALTER TABLE ONLY .+ ALTER COLUMN .+ SET \(pg_attver=)\d+(\);)$',
+                    r'\g<1>INTERNAL\2', schema, flags=re.M)
     return schema
+
+
+def schema_snapshot(database, env):
+    return normalize_schema(run(['pg_dump', '--schema-only', '--no-owner', '-d', database], env))
 
 
 def contents(database, env):
