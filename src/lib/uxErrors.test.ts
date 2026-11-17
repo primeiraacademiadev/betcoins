@@ -68,3 +68,10 @@ describe('catálogo de erros RPC', () => {
   }
  });
 });
+
+describe('reconciliação de contratos legados',()=>{
+ it('distingue uma revisão desatualizada de um contrato protegido',()=>{
+  expect(classifyError({code:'BL001'}).code).toBe('PREVIEW_CHANGED');
+  expect(classifyError({code:'BL002'}).code).toBe('LEGACY_REVIEW');
+ });
+});
