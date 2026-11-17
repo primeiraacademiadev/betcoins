@@ -61,3 +61,5 @@ O [YTD inicial e as entradas a meio do período](docs/ENTRY_BASELINES.md) estão
 Reconciliação de legado: [pré-visualização, auditoria e preservação de contratos](docs/LEGACY_MARKET_RECONCILIATION.md), migração 15 apenas versionada, dependente de 01–14.
 
 Associação de legado: [preparação suspensa, revisão de compatibilidade e ligação auditada às bets](docs/LEGACY_BET_ASSOCIATION.md), migração 16 apenas versionada, dependente de 01–15.
+
+#11: [matriz de aceitação do modelo atual e evidência dos 30 critérios](docs/ISSUE_11_ACCEPTANCE.md). Migração 17 de estatísticas/histórico apenas versionada, sem Supabase remoto. Compatibilidade legada não exigida.

@@ -125,3 +125,8 @@ A [reconciliação revista de mercados legados](LEGACY_MARKET_RECONCILIATION.md)
 ## Seguimento: migração 16
 
 A [associação revista às bets recorrentes](LEGACY_BET_ASSOCIATION.md) permite organizar mercados compatíveis com revisão e auditoria, alterando apenas a ligação. Atualiza o limite anterior sobre associação: colisões e fusões continuam bloqueadas. Migração apenas versionada, sem instalação remota.
+
+
+## Âmbito revisto e aceitação final — 17/11/2026
+
+Não existem casos legados nem requisito de compatibilidade para trás. Reconciliações, associações e colisões deixam de bloquear a #11. O PR #40 foi refeito para [completar e testar os critérios do modelo atual](ISSUE_11_ACCEPTANCE.md): histórico de ofertas/trades, resultados por ocorrência e navegação. Migração 17 apenas versionada; empate/zero bloqueado; nenhuma instalação remota. Esta decisão substitui os limites anteriores relativos ao legado.

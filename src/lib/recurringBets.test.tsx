@@ -22,7 +22,7 @@ describe('recurring calendar navigation',()=>{
  it('never falls back to a different occurrence when history has no markets',()=>{
   expect(marketsForOccurrence([m],'d','missing')).toEqual([]);
   expect(marketsForOccurrence([m],'other','o')).toEqual([]);
-  expect(marketsForOccurrence([m,{...m,id:'legacy',definition_id:null}],'','')).toHaveLength(1);
+  expect(marketsForOccurrence([m,{...m,id:'legacy',definition_id:null}],'','')).toHaveLength(0);
  });
  it('shows mode, dates and changing-universe notice without requiring competitor selection',()=>{
   const d:BetDefinition={id:'d',championship_id:'c',kind:'weekly',mode:'snapshot_delta_previous',active:true};

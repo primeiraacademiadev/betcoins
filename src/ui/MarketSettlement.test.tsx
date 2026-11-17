@@ -12,11 +12,11 @@ describe('validated settlement presentation',()=>{
   expect(html).not.toContain('Escolha manual');
   expect(html).toContain('role="status"');
  });
- it('shows the server-derived winner safely and identifies the existing sprint criterion',()=>{
-  const html=renderToStaticMarkup(<ResolutionDetails result={{status:'ready',criterion:'sprint_delta_start_end'}} winner="A <B>"/>);
+ it('shows the server-derived winner safely and identifies the explicit current criterion',()=>{
+  const html=renderToStaticMarkup(<ResolutionDetails result={{status:'ready',criterion:'snapshot_delta_previous'}} winner="A <B>"/>);
   expect(html).toContain('A &lt;B&gt;');
-  expect(html).toContain('próprio sprint');
-  expect(html).toContain('Legado:');
+  expect(html).toContain('período anterior');
+  expect(html).not.toContain('Legado:');
  });
  it('does not interpret an unknown status as permission to settle',()=>{
   expect(resolutionMessage('new_state')).toContain('indisponível');
