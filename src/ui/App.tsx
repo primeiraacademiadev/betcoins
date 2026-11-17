@@ -64,7 +64,7 @@ export function App(){
   try {
    const [c,m,o,f,p,l,w,r,a,role] = await Promise.all([
      rpc<Competitor[]>('get_competitors'),selectRows<Market>('markets'),selectRows<Outcome>('outcomes'),
-     selectRows<Offer>('offers'),selectRows<Position>('my_positions'),rpc<Listing[]>('get_active_listings'),
+     selectRows<Offer>('offers'),selectRows<Position>('positions'),rpc<Listing[]>('get_active_listings'),
      rpc<Wallet>('get_wallet'),getSpectatorRankings(rankAsOf),rpc<Application[]>('get_applications'),rpc<{is_competitor:boolean;is_admin:boolean}>('my_roles')
    ]);
    const ownProfile=(await selectRows<{nickname:string}>('profiles',{column:'id',value:user.id}))[0]||null;setProfile(ownProfile);setNickname(ownProfile?.nickname||'');

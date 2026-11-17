@@ -67,3 +67,5 @@ Associação de legado: [preparação suspensa, revisão de compatibilidade e li
 Qualidade: [instalação de dependências com lock, exports SQL gerados e âmbito do Sonar](docs/SONAR_QUALITY.md). Gerar exports não aplica migrações.
 
 Operação #8: [matriz de aceitação](docs/ISSUE_8_ACCEPTANCE.md) e [backup, recuperação e quotas](docs/OPERATIONS_RECOVERY.md). O CI ensaia restauro numa base local descartável; não altera o Supabase remoto nem certifica uma recuperação completa dos serviços Auth/Storage.
+
+Testes #8: [fluxos financeiros no navegador](docs/FINANCIAL_BROWSER_TESTS.md), com a aplicação completa, PostgREST/PostgreSQL locais, duas modalidades e larguras desktop/telemóvel. Identidades de teste controladas; operações financeiras reais, sem migrações no Supabase remoto.
