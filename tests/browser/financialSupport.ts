@@ -10,7 +10,7 @@ const contexts:BrowserContext[]=[];
 const external:string[]=[];
 const errors:string[]=[];
 export function seed(scenario:'trading'|'uncertain'|'settlement',mode:Mode):Fixture {
- return JSON.parse(execFileSync('python3',['tests/browser/financial_setup.py','seed',scenario,mode],
+ return JSON.parse(execFileSync('/usr/bin/python3',['tests/browser/financial_setup.py','seed',scenario,mode],
   {encoding:'utf8',timeout:60000}));
 }
 export async function cleanup(){
@@ -19,7 +19,6 @@ export async function cleanup(){
   if(failed)for(const [pageIndex,page] of context.pages().entries()){
    await page.screenshot({path:test.info().outputPath(`actor-${index}-${pageIndex}.png`),fullPage:true});
   }
-  await context.tracing.stop(failed?{path:test.info().outputPath(`actor-${index}-trace.zip`)}:{});
   await context.close();
  }
  expect(external.splice(0),'Financial tests must never contact remote services').toEqual([]);
@@ -31,7 +30,6 @@ export async function actor(browser:Browser,id:string,nickname:string){
   app_metadata:{provider:'test'},user_metadata:{},identities:[],created_at:'2026-01-01T00:00:00Z'};
  const context=await browser.newContext({baseURL:origin,viewport:test.info().project.use.viewport,
   locale:'pt-PT',timezoneId:'Europe/Lisbon'});contexts.push(context);
- await context.tracing.start({screenshots:true,snapshots:true});
  await context.route('**/*',route=>{
   const url=new URL(route.request().url());
   if(url.origin===origin)return route.continue();

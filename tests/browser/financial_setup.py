@@ -1,8 +1,7 @@
-"""Disposable localhost fixtures. No Supabase credentials, remote hosts or migrations."""
+"""Disposable localhost fixtures; no Supabase credentials or remote database access."""
 import json
 import os
 from pathlib import Path
-import secrets
 import sys
 import time
 import uuid
@@ -38,11 +37,8 @@ def initialize(env):
     sql("""create or replace function auth.uid() returns uuid language sql stable as $$
       select coalesce(nullif(current_setting('request.jwt.claim.sub',true),''),
         nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;""", env)
-    password, jwt_secret = secrets.token_hex(32), secrets.token_hex(32)
+    password = os.environ['FINANCIAL_DB_PASSWORD']
     sql(f"create role browser_gateway login noinherit password '{password}'; grant anon,authenticated to browser_gateway;", env)
-    with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as target:
-        target.write(f'FINANCIAL_JWT_SECRET={jwt_secret}\nFINANCIAL_DB_PASSWORD={password}\n')
-    print(f'::add-mask::{jwt_secret}\n::add-mask::{password}')
 
 
 def seed(scenario, mode, env):

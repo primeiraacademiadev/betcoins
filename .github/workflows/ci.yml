@@ -2,6 +2,8 @@ name: CI
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-24.04
@@ -191,24 +193,22 @@ jobs:
           node-version: '22'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: ./node_modules/.bin/playwright install --with-deps chromium
-      - name: Prepare disposable local schema and ephemeral test credentials
-        run: python3 tests/browser/financial_setup.py init
-      - name: Start real local PostgREST with a restricted gateway role
-        env:
-          PGRST_DB_URI: postgres://browser_gateway:${{ env.FINANCIAL_DB_PASSWORD }}@127.0.0.1:5432/betcoins
-          PGRST_JWT_SECRET: ${{ env.FINANCIAL_JWT_SECRET }}
-          PGRST_DB_ANON_ROLE: anon
-          PGRST_SERVER_PORT: 54322
+      - name: Financial browser flows against real PostgreSQL and PostgREST
         run: |
-          docker run --detach --name betcoins-browser-api --network host --env PGRST_DB_URI --env PGRST_JWT_SECRET --env PGRST_DB_ANON_ROLE --env PGRST_SERVER_PORT postgrest/postgrest:v16.6
+          export FINANCIAL_DB_PASSWORD="$(openssl rand -hex 32)"
+          export FINANCIAL_JWT_SECRET="$(openssl rand -hex 32)"
+          python3 tests/browser/financial_setup.py init
+          export PGRST_DB_URI="postgres://browser_gateway:${FINANCIAL_DB_PASSWORD}@127.0.0.1:5432/betcoins"
+          export PGRST_JWT_SECRET="$FINANCIAL_JWT_SECRET"
+          export PGRST_DB_ANON_ROLE=anon PGRST_SERVER_PORT=54322 PGRST_SERVER_HOST=127.0.0.1
+          docker run --detach --name betcoins-browser-api --network host --env PGRST_DB_URI --env PGRST_JWT_SECRET --env PGRST_DB_ANON_ROLE --env PGRST_SERVER_PORT --env PGRST_SERVER_HOST postgrest/postgrest:v16.6
+          ready=false
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:54322/ > /dev/null; then exit 0; fi
+            if curl --fail --silent http://127.0.0.1:54322/ > /dev/null; then ready=true; break; fi
             sleep 1
           done
-          docker logs betcoins-browser-api
-          exit 1
-      - name: Financial browser flows against real PostgreSQL and PostgREST
-        run: npm run test:financial
+          if [ "$ready" != true ]; then docker logs betcoins-browser-api; exit 1; fi
+          npm run test:financial
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -1,6 +1,6 @@
 import {defineConfig} from '@playwright/test';
 export default defineConfig({
- testDir:'tests/browser',testMatch:'financial.spec.ts',workers:1,fullyParallel:false,retries:0,
+ testDir:'tests/browser',testMatch:'financial.spec.ts',workers:1,fullyParallel:false,retries:0,maxFailures:3,
  timeout:90000,expect:{timeout:10000},
  projects:[{name:'financial-desktop',use:{viewport:{width:1280,height:900}}},
   {name:'financial-mobile',use:{viewport:{width:390,height:844}}}],
