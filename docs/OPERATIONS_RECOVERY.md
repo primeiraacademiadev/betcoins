@@ -20,6 +20,9 @@ Depois de todas as migrações e dos testes concorrentes, `tests/db/recovery.py`
 1. Recusa hosts remotos, destinos arbitrários, serviços libpq e opções de ligação
    alternativas. Só aceita a origem local `betcoins` e cria `betcoins_recovery`.
    Se o destino existir, termina sem o substituir; não contém DROP DATABASE.
+   Exige clientes pg_dump/pg_restore da mesma versão principal do servidor. O CI
+   usa Ubuntu 24.04 com PostgreSQL 16, evitando exports de um cliente mais recente
+   que introduzam parâmetros desconhecidos no servidor 16.
 2. Exporta a base populada com `pg_dump` e restaura numa base nova com
    `pg_restore --exit-on-error --single-transaction`. Mantém grants, funções,
    políticas RLS, constraints, triggers e dados. Os papéis já existem no cluster CI.

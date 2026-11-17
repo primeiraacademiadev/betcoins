@@ -47,6 +47,18 @@ class RecoveryGuards(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, r'^psql failed \(exit 1\); rehearsal stopped$'):
                 recovery.run(['psql'], {})
 
+    def test_backup_clients_must_match_server_major_before_export(self):
+        for versions, accepted in [(['pg_dump (PostgreSQL) 16.15', 'pg_restore (PostgreSQL) 16.15'], True),
+                                    (['pg_dump (PostgreSQL) 18.1'], False),
+                                    (['pg_dump (PostgreSQL) 16.15', 'pg_restore (PostgreSQL) 18.1'], False)]:
+            with self.subTest(versions=versions), patch.object(recovery, 'query', return_value='160015'):
+                with patch.object(recovery, 'run', side_effect=versions):
+                    if accepted:
+                        recovery.check_versions({})
+                    else:
+                        with self.assertRaisesRegex(RuntimeError, 'must match PostgreSQL server major 16'):
+                            recovery.check_versions({})
+
 
 if __name__ == '__main__':
     unittest.main()

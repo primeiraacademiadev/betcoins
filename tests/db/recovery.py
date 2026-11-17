@@ -43,6 +43,15 @@ def query(database, command, env):
                 '-c', command], env).strip()
 
 
+def check_versions(env):
+    server_major = int(query(SOURCE, 'show server_version_num', env)) // 10000
+    for client in ('pg_dump', 'pg_restore'):
+        version = run([client, '--version'], env)
+        match = re.search(r'\(PostgreSQL\) (\d+)\.', version)
+        if not match or int(match.group(1)) != server_major:
+            raise RuntimeError(f'{client} must match PostgreSQL server major {server_major}')
+
+
 def schema_digest(database, env):
     schema = run(['pg_dump', '--schema-only', '--no-owner', '-d', database], env)
     # Recent pg_dump versions generate a new psql restriction key per export.
@@ -66,6 +75,7 @@ def main():
     env = local_environment(os.environ)
     if query('postgres', f"select count(*) from pg_database where datname='{TARGET}'", env) != '0':
         raise RuntimeError('Recovery target already exists; no database was overwritten')
+    check_versions(env)
     before_schema = schema_digest(SOURCE, env)
     before_rows = contents(SOURCE, env)
     if not before_rows or not query(SOURCE, 'select count(*) from public.trades', env).isdigit():
