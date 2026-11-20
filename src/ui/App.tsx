@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowRight, ChartNoAxesCombined, Check, CircleDollarSign, Coins, ExternalLink, LogIn, LogOut, Menu, Plus, RefreshCw, Shield, Trophy, Wallet as WalletIcon } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { client, configured, rpc, selectRows } from '../lib/supabase';
+import {observeVerifiedSession} from '../lib/authSession';
 import { useToast } from './ToastProvider';
 import { classifyError, errorFor, errorText, validateOdd, validateStake, validatePrice, validateYtd, validateDateRange } from '../lib/uxErrors';
 import { acceptanceTerms, formatCoins, positionPayoff, resaleLotStep, type PositionSale, type PositionSettlement, type Application, type Competitor, type LedgerEntry, type Listing, type Market, type Offer, type Outcome, type Position, type Ranking, type Wallet } from '../lib/domain';
@@ -45,15 +46,7 @@ export function App(){
  const [user,setUser]=useState<User|null>(null);
  useEffect(()=>{
   if(!client)return;
-  let active=true,events=0;
-  const initial=events;
-  void client.auth.getUser().then(({data})=>{if(active&&events===initial)setUser(data.user)});
-  const {data:{subscription}}=client.auth.onAuthStateChange((event,session)=>{
-   // INITIAL_SESSION is cached; getUser verifies the initial identity instead.
-   if(event==='INITIAL_SESSION')return;
-   events++;if(active)setUser(session?.user||null);
-  });
-  return()=>{active=false;subscription.unsubscribe()};
+  return observeVerifiedSession(client.auth,setUser);
  },[]);
  // An identity change destroys all private data, form drafts and admin state.
  return <SessionApp key={user?.id||'anonymous'} user={user}/>;
