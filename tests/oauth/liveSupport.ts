@@ -31,7 +31,15 @@ export async function startOAuth(page:Page,provider:Provider):Promise<RedirectEv
  await expect.poll(()=>new URL(page.url()).hostname,{timeout:45000}).toBe(provider==='google'?'accounts.google.com':'github.com');
  // A provider error page on the same host is not a successful redirect check.
  const identity=provider==='google'?page.locator('input[type="email"]'):page.getByLabel('Username or email address',{exact:true});
- await expect(identity).toBeVisible({timeout:15000});
+ try{await expect(identity).toBeVisible({timeout:15000})}catch(failure){
+  const body=await page.locator('body').innerText();
+  const categories=['invalid_client','redirect_uri_mismatch','access_denied','disallowed_useragent','org_internal','invalid_request'];
+  const category=categories.find(value=>body.includes(value))||(/browser or app may not be secure|navegador.*segur/i.test(body)?'browser_rejected':'unclassified_provider_page');
+  // Only a fixed category and public control metadata; no page text, auth URL,
+  // state, account identifiers or values from credential fields are logged.
+  console.log({provider,category,inputs:await page.locator('input').evaluateAll(nodes=>nodes.map(node=>({type:node.getAttribute('type'),id:node.id}))) });
+  throw failure;
+ }
  return evidence;
 }
 
