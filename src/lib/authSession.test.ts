@@ -10,7 +10,7 @@ function fixture(){
  let emit:Parameters<AuthSource['onAuthStateChange']>[0]=()=>{};
  const unsubscribe=vi.fn();
  const source:AuthSource={
-  getUser:vi.fn(()=>new Promise((resolve,reject)=>{
+  getUser:vi.fn(()=>new Promise<{data:{user:User|null}}>((resolve,reject)=>{
    requests.push({resolve:user=>resolve({data:{user}}),reject:()=>reject(new Error('unavailable'))});
   })),
   onAuthStateChange:callback=>{emit=callback;return {data:{subscription:{unsubscribe}}}},
