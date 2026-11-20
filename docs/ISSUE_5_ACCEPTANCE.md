@@ -1,70 +1,58 @@
-# E4 / #5 — mercados P2P e liquidação validada
+# #5 — mercados P2P e liquidação
 
-## Entrega e limite
+Atualizado em 20/11/2026. Esta matriz descreve o modelo atual, após os PRs
+#33–#45; as entregas por migração são histórico técnico, não novas pendências.
 
-A migração 10 (`202611160001_validated_market_settlement.sql`) é apenas versionada;
-não foi executada no Supabase remoto. Requer as migrações 01–09. A publicação do
-frontend não instala SQL. Sem a migração, o painel de apuramento indica indisponibilidade.
+## Estado atual
 
-Esta entrega protege a liquidação regular existente. Não fecha integralmente a #5:
-as modalidades `snapshot_value` e `snapshot_delta_previous` e o empate/zero da #1
-continuam dependentes do desenho financeiro aprovado. Não existe tesouraria nova,
-anulação por empate, devolução improvisada nem escolha técnica de um empatado.
+O fluxo regular de mercados P2P está implementado e testado no código:
+BACK/LAY, aceitação parcial, reservas, cancelamento do remanescente, revenda,
+validação e liquidação idempotente. As duas modalidades e as bets recorrentes
+já foram entregues; a #11 está encerrada. Não existe requisito de compatibilidade
+ou reconciliação legada. Reversões financeiras ficam fora do MVP.
 
-| Critério | Comportamento e verificação |
+A #5 continua aberta pelo tratamento financeiro de empate/zero.
+O comportamento executável mantém-se: **empate/zero bloqueado**, sem pagamentos,
+devoluções, tesouraria ou vencedor escolhido manualmente.
+A [proposta financeira](TIE_ZERO_PROPOSAL.md) é uma decisão a rever antes de implementar.
+
+| Critério | Estado e evidência |
 | --- | --- |
-| BACK/LAY e aceitação parcial | Motor existente preservado; testes SQL com ambos os lados, odds fracionárias, excesso de stake, autocontratação e entradas nulas/NaN |
-| Colateral e conservação | Cancelamento devolve só a parte não correspondida; liquidação devolve o remanescente e paga os titulares atuais. Reconciliação de cada carteira e soma de moeda verificadas |
-| Concorrência | Mutex transacional comum antes de mercado/oferta/posição/carteiras. Sessões reais disputam aceitações, saldo em mercados diferentes, compra, cancelamento e settlement |
-| Fecho | Relógio real após espera pelo lock; testes iniciam transações antes do corte, retêm o lock até depois dele e tentam colocar/aceitar/revender/comprar |
-| Resultado validado | O mercado identifica campeonato/sprint. O resultado vem exclusivamente das linhas imutáveis da validação E2 e do respetivo snapshot, com o mesmo instante de fecho e universo de concorrentes |
-| Empates/ausências | Bloqueio explícito se faltar algum score, se houver empate no lugar relevante ou se o 2.º lugar não existir (1,1,3). Não inventa vencedor/zero/void |
-| Autorização | Admin obrigatório na criação/liquidação; cores internas sem EXECUTE para clientes; escritas diretas bloqueadas e resolução imutável |
-| Auditoria/idempotência | `market_resolutions` liga mercado, validação, outcome, administrador e data. Repetir a mesma liquidação nova não duplica pagamentos; resultado diferente ou legado é rejeitado |
-| Revendas e P&L | Pagamento e custo do titular final preservados; resultado das vendas anteriores não é revertido |
-| Interface | Retirada a seleção manual de vencedor; mostra motivo de bloqueio, critério existente e resultado calculado pelo servidor |
+| BACK/LAY e aceitação total/parcial | Implementado; testes SQL e financeiros no navegador, limites de stake/odds e proibição de autocontratação |
+| Colateral e conservação | Implementado; risco de ambos os lados reservado, reconciliação de carteiras/ledger e conservação da moeda |
+| Cancelamento | Devolve apenas a reserva do remanescente não correspondido, sem desfazer negócios; idempotente, permitido após corte |
+| Revenda integral/parcial | Implementada; transfere titularidade/risco/colateral, mantém custo de aquisição e P&L das vendas anteriores |
+| Concorrência e corte | Sessões PostgreSQL reais disputam saldo, aceitação, compra, cancelamento e liquidação; relógio validado após espera pelos locks |
+| Classificação e liquidação | Resultado validado e fontes congeladas; autorização administrativa, auditoria, imutabilidade e repetição sem pagamentos duplicados |
+| Duas modalidades | `snapshot_value`: YTD efetivo no fecho; `snapshot_delta_previous`: diferença em pp face ao original do fecho anterior, com exceção do baseline inicial aprovada na #11 |
+| Calendário e elegibilidade | Bets recorrentes, geração idempotente, entradas a meio do período, declarações finais/penalizações e resultados por ocorrência entregues na #11 |
+| Empate/zero | Bloqueado no servidor e interface; proposta financeira não implementada nem aprovada |
+| Dados incompletos | Permanecem bloqueados; ausência de score, referência ou concorrentes suficientes não é zero |
+| Interface e segurança | Modalidade e motivos de bloqueio visíveis; sem seleção arbitrária de vencedor, nem escrita direta de saldos/ledger/posições |
 
-## Critérios existentes versus modalidades da #1
+## Evidência de verificação
 
-O anual existente usa YTD absoluto; os sprints existentes usam `end − start`
-do próprio sprint, em pp. Isto **não** implementa os dois novos tipos de mercado
-da #1, nem substitui a referência pelo snapshot do período anterior. A interface
-torna esta distinção visível.
+- `tests/db/markets.sql`, `market_modes.sql` e respetivas suites concorrentes:
+  motor P2P, modalidades, corte, reconciliação, autorização e liquidação.
+- `tests/db/issue_11_acceptance.sql` e `issue_11_acceptance_concurrency.py`:
+  modelo recorrente atual, fontes congeladas, declarações, penalizações e baseline.
+- [Testes financeiros no navegador](FINANCIAL_BROWSER_TESTS.md): aplicação completa,
+  PostgREST/PostgreSQL reais no CI, duas modalidades e larguras 1280/390 px.
+- PRs #43–#45 integrados; CI de main verde em
+  [5efc0fe](https://github.com/primeiraacademiadev/betcoins/actions/runs/44724549155).
+  Os testes existentes demonstram o bloqueio do empate, não uma liquidação de zero.
 
-O resultado é calculado sobre o universo completo congelado. Se um novo admitido
-aparecer no apuramento sem outcome no mercado, a liquidação bloqueia. A política
-de atualização de outcomes e elegibilidade pertence à #11; não se exclui esse
-concorrente silenciosamente nem se alteram apostas existentes nesta entrega.
+Os percursos históricos de migração testam a evolução do esquema.
+Não criam obrigação de compatibilidade de produto. Esta revisão não consulta
+nem altera o esquema remoto: publicação do frontend e CI verde não comprovam
+quais migrações estão instaladas no Supabase.
 
-## Instalação e mercados existentes
+## Próxima decisão da #5
 
-Antes de qualquer instalação autorizada: backup, revisão e teste numa cópia.
-Aplicar 09 antes de 10. Não reaplicar a baseline numa base existente. A migração
-10 é transacional e não contém fixtures de teste nem comandos de acesso remoto.
+Rever a proposta de empate/zero: âmbito do empate relevante, perda de BACK e LAY,
+destino dos colaterais, P&L após revenda e comunicação antes da contratação.
+Só após aprovação se pode preparar implementação e testes específicos.
+Não ativar por esta revisão. Sem migrações remotas.
 
-Os mercados antigos permanecem consultáveis/negociáveis até ao seu corte, mas
-não recebem uma associação retroativa presumida. A liquidação desses mercados
-fica bloqueada, exigindo um procedimento próprio de reconciliação. Resultados
-já liquidados, carteiras e históricos não são recalculados. O endpoint legado de
-criação pede a interface atualizada; os novos mercados usam período explícito,
-hora de fecho do período e todos os concorrentes atuais.
-
-Cancelar uma oferta própria não correspondida continua permitido depois do corte
-e é idempotente. A criação, aceitação e revenda não são permitidas após o corte.
-O mutex único é uma escolha conservadora para o volume do MVP; serializa operações
-financeiras entre mercados. Dotações administrativas continuam a usar os locks
-de carteira existentes; em caso de conflito transacional a operação falha inteira.
-
-## Verificação
-
-`tests/db/markets.sql`: nos três percursos de instalação/upgrade, depois dos testes
-legados e da migração 09. Fixtures revertidas por ROLLBACK.
-`tests/db/markets_concurrency.py`: sessões PostgreSQL reais, apenas localhost.
-Testes de interface cobrem razões de bloqueio e apresentação do resultado.
-
-Continuam fora desta entrega: geração recorrente (#11), resolução financeira de
-empate/zero, modalidades adicionais da #1, void/reversão e migração de produção.
-
-## Seguimento: migração 11
-
-As duas modalidades adicionais estão agora preparadas no código da migração 11, com classificação validada própria e liquidação regular; ver [modalidades](SNAPSHOT_MARKET_MODES.md). A #5 continua aberta para empate/zero, reconciliação legada e dependências de calendário/elegibilidade. Esta secção atualiza o limite histórico da entrega 10 acima. Nenhuma destas migrações foi aplicada remotamente.
+Backups/quotas foram adiados no encerramento da #8; reversões/reabertura
+financeira ficam fora do MVP. Não são acrescentados à aceitação desta proposta.

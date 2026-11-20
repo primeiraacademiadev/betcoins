@@ -48,7 +48,7 @@ O apuramento auditado e a validação final E2 estão preparados na **migração
 
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.
 
-A liquidação P2P vinculada à classificação validada está preparada na **migração 10, apenas versionada**, dependente da 09. Bloqueia empates, dados incompletos e mercados sem período associado. A #5 continua aberta para as lacunas de produto/finanças. [Critérios, instalação e limites](docs/ISSUE_5_ACCEPTANCE.md).
+Mercados P2P #5: fluxo regular, duas modalidades, calendário recorrente e liquidação validada implementados e testados no código. Empate/zero continua bloqueado. A [matriz atual](docs/ISSUE_5_ACCEPTANCE.md) distingue entregas concluídas da [proposta financeira BACK/LAY](docs/TIE_ZERO_PROPOSAL.md), ainda por aprovar e implementar. Não existe tesouraria ativa nem compatibilidade legada exigida; reversões ficam fora do MVP. Esta revisão não executa nem confirma instalações remotas.
 
 As [duas modalidades da regra #1](docs/SNAPSHOT_MARKET_MODES.md) estão preparadas na **migração 11, apenas versionada**, dependente de 01–10. Empate/zero continua bloqueado; mercados anteriores mantêm os critérios legados.
 

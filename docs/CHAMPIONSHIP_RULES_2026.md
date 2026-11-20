@@ -85,3 +85,22 @@ A autorização para implementar o baseline inicial da #11 separa admissão e pa
 ## Âmbito atualizado da #11 — 17/11/2026
 
 Não existe obrigação de compatibilidade ou reconciliação de legado; dados exclusivamente de teste não conformes podem ser removidos numa operação identificada. A aceitação incide no modelo recorrente atual e nas duas modalidades, com [matriz e testes](ISSUE_11_ACCEPTANCE.md). Os resultados finais por ocorrência são persistidos pela migração 17; histórico e rankings não usam YTD corrente como substituto de fontes ausentes. Empate/zero permanece bloqueado, sem anulação/devolução automática. Supabase remoto não migrado.
+
+## 10. Estado e proposta da #5 — 20/11/2026
+
+As modalidades, geração recorrente, declarações/penalizações e entrada efetiva
+descritas nas secções históricas anteriores foram entregues; a #11 está encerrada.
+Não existe requisito de compatibilidade legada. A [matriz atual da #5](ISSUE_5_ACCEPTANCE.md)
+substitui listas antigas de pendências dessas entregas.
+
+A regra aprovada de empate/zero continua **bloqueada no motor**, sem pagamentos,
+devoluções ou tesouraria. A [proposta financeira BACK/LAY](TIE_ZERO_PROPOSAL.md)
+recomenda zero ao mercado inteiro por empate relevante, perda da stake BACK e da
+responsabilidade LAY e transferência para uma conta técnica que retém os valores.
+Explicita também o custo/P&L após revenda e a condição de não pagar LAY perante zero.
+Essas escolhas são propostas a aprovar, não regras já aprovadas ou implementadas.
+
+Reversões e reabertura financeira ficam fora do MVP por decisão do operador.
+A #8 foi encerrada; backups e quotas ficaram adiados, sem os dar como confirmados.
+Duas modalidades e empate/zero bloqueado mantidos. Esta revisão não executa
+migrações no Supabase remoto nem confirma o estado de instalação remota.
