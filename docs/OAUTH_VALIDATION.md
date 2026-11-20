@@ -35,8 +35,9 @@ de sessão. Traces, vídeos e screenshots automáticos estão desligados neste e
 Os diretórios de diagnóstico estão ignorados pelo Git; se uma falha gerar contexto
 com informação da conta de teste, mantê-lo local e não o anexar a issues ou PRs.
 
-Em cada fornecedor, confirmar também manualmente cancelamento no ecrã de
-consentimento, negação de acesso e eventual MFA. CAPTCHA, introdução de credenciais,
+O ecrã de consentimento pode não ser apresentado pelo fornecedor. Cancelamento
+nesse ecrã não é um requisito adicional da #8, nem exige revogar permissões para
+o fazer aparecer. CAPTCHA, introdução de credenciais, eventual MFA,
 aprovação de novas permissões e criação de contas ficam a cargo do operador.
 Não contornar bloqueios dos fornecedores para automatizar a entrada.
 
@@ -55,12 +56,12 @@ posições existentes, uma resposta atrasada e reload posterior.
 
 ## Estado da validação real
 
-O PR #43 está integrado em `main` e publicado. Foi observado o redirecionamento
-publicado até ao início de sessão real do GitHub para BetCoins, com callback do
-projeto Supabase. Foi solicitada a autenticação pelo operador no navegador.
+Os PRs #43 e #44 estão integrados em `main` e publicados. Em 20/11/2026, o operador
+confirmou, para GitHub e Google, entrada/regresso à aplicação, persistência da
+sessão após recarregar e ausência de sessão depois de sair e recarregar.
+Estes fluxos ficam validados manualmente pelo operador; não se afirma que o comando
+de ensaio assistido foi executado, nem que o preflight certifica login completo.
 
-**Login completo, persistência e logout reais de Google/GitHub continuam por
-certificar até o operador concluir ambos os ensaios.** Um preflight verde ou uma
-regressão local verde não substitui essa evidência. Não fechar a #8 com base apenas
-nestes testes; recuperação completa Auth/Storage, quotas e reversões mantêm os
-limites documentados na matriz de aceitação.
+A #8 mantém apenas as confirmações operacionais mínimas de backups e quotas
+descritas na [matriz de aceitação](ISSUE_8_ACCEPTANCE.md). Reversões ficam fora do
+MVP. Não exige restauro integral do serviço remoto nem cancelamento no fornecedor.

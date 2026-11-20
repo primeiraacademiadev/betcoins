@@ -41,7 +41,26 @@ O arquivo temporário não é publicado como artefacto. O ensaio mede integridad
 funcionalidade da base PostgreSQL de teste. O stub Auth do CI não certifica OAuth,
 sessões, Storage, segredos, DNS nem uma recuperação completa do serviço Supabase.
 
-## Preparação pelo operador
+## Mínimo operacional do MVP
+
+Esta revisão documental de 20/11/2026 não consulta o painel remoto, não exporta
+dados reais nem configura alertas. Define o mínimo a confirmar, sem o dar por feito.
+
+Para backups, identificar uma cópia recente da base (dados e esquema/permissões),
+a sua data, localização fora do projeto de origem e frequência de atualização.
+Guardar dados e credenciais em local restrito, fora do repositório. O restauro
+automatizado no CI já verifica o procedimento técnico; não substitui essa cópia.
+Uma pasta de configurações ou credenciais não demonstra um backup da base.
+
+Para quotas, identificar quem acompanha o consumo, o plano e limites aplicáveis,
+e o canal de aviso disponível. Quando o plano não oferecer alertas, basta uma
+rotina de consulta manual com frequência e data da última verificação registadas.
+Não é necessário desenvolver monitorização automática para fechar a #8.
+
+## Recomendações de operação
+
+As recomendações seguintes ajudam a operar o serviço. Substituto, objetivos de
+24 horas/4 horas e limiares de 80%/95% não são requisitos adicionais do MVP.
 
 Antes de começar a época, identificar um responsável e substituto, o projeto correto,
 o plano contratado, o commit publicado e as migrações efetivamente instaladas.
@@ -86,7 +105,8 @@ Este procedimento não foi executado remotamente nesta entrega.
    diferenças e responsável. Um CI verde não autoriza esta operação remota.
 
 Uma classificação ou liquidação errada não é automaticamente um incidente de
-backup. Não há função de reversão/reabertura financeira no MVP. Preservar os
+backup. Reversões e reabertura financeira ficam fora do MVP por decisão do operador
+em 20/11/2026 e não bloqueiam a #8. Não existe essa função. Preservar os
 registos, impedir novas operações afetadas e preparar uma correção separada com
 regras aprovadas. Não editar saldos, apagar ledger ou usar void para contornar
 empate/zero. A recuperação não oferece uma reversão seletiva de negócios.
@@ -106,11 +126,29 @@ automática nesta entrega. Se não houver alertas no plano, manter a verificaç�
 manual e registar a data. Reduzir leituras repetidas, exportar antes de mudanças e
 avaliar capacidade com o grupo; não eliminar auditoria para libertar espaço.
 
-## Limites de aceitação
+## Confirmações pendentes
 
-A #8 fica parcialmente concluída: o CI cobre o restauro da base e os casos críticos
-de autorização/concorrência. Continuam por demonstrar um ensaio Supabase completo,
-responsáveis e notificações de quota efetivamente configurados, OAuth no navegador
-e o procedimento de correção/reversão aprovado. Não fechar a issue com base apenas
-no ensaio PostgreSQL. Os testes de navegador existentes verificam componentes
-reais e navegação responsiva com dados controlados, sem ligação Supabase.
+| Ponto | Estado em 20/11/2026 | Confirmação mínima |
+| --- | --- | --- |
+| Cópia da base real | Não confirmada; o arquivo temporário do CI é de teste | Data da última cópia, projeto a que pertence e localização restrita fora da origem; confirmar que inclui dados e esquema/permissões |
+| Frequência das cópias | Não confirmada | Registar quando são feitas e quem as acompanha |
+| Plano e consumo | Não consultados nesta revisão | Confirmar plano/limites e leitura atual de base, tráfego e utilizadores ativos; Storage apenas se utilizado |
+| Responsável e avisos | Não confirmados | Identificar responsável e canal dos avisos disponíveis; em alternativa, frequência da consulta manual e data da última leitura |
+
+Não publicar ficheiros de backup, credenciais ou dados pessoais para demonstrar
+estas confirmações; basta registar o estado e manter a evidência em local restrito.
+Nesta revisão não foi demonstrado um backup recente nem a configuração de avisos.
+
+## Aceitação da #8
+
+Estão concluídos os testes críticos de autorização/concorrência, fluxos financeiros
+no navegador com PostgREST/PostgreSQL reais no CI, experiência responsiva e ensaio
+de restauro da base. O operador confirmou manualmente entrada, persistência e saída
+com GitHub e Google em 20/11/2026; ver [evidência e limites](OAUTH_VALIDATION.md).
+
+A #8 mantém-se aberta apenas pelas confirmações operacionais mínimas acima.
+O ensaio de restauro não certifica uma recuperação integral do serviço Supabase;
+essa limitação não cria uma obrigação de restaurar o ambiente remoto. Não é exigido
+um ensaio de Storage sem utilização demonstrada, nem reversões ou cancelamento
+no consentimento dos fornecedores. Duas modalidades e empate/zero bloqueado mantidos.
+Nenhuma migração remota é executada por esta revisão documental.

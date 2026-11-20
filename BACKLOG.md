@@ -61,7 +61,7 @@ Ter um jogo utilizável para o Campeonato 2026 (31-12-2026), com um ranking de i
 ### E7 — Experiência, operações e qualidade (P1)
 - Dashboard da época e dos sprints, onboarding, páginas dos mercados, posições e histórico.
 - Avisos de risco fictício, ausência de dinheiro real; acessibilidade móvel.
-- Gestão de resultados, correção auditada, reabertura e reversão de liquidações com procedimento documentado.
+- Gestão de resultados e procedimento de incidente com preservação da auditoria. Reabertura financeira e reversão de liquidações ficam fora do MVP por decisão do operador em 20-11-2026; não bloqueiam a #8. Não editar saldos/ledger nem contornar empate/zero.
 - Testes E2E: acesso indevido, votação simultânea, duplicação de recargas, double spend, dupla venda, corrida entre venda e liquidação.
 - Observabilidade, exportação/backups, plano de recuperação e limites free tier.
 
