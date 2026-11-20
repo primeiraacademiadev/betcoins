@@ -30,7 +30,7 @@ export async function startOAuth(page:Page,provider:Provider):Promise<RedirectEv
  await page.getByRole('button',{name:provider==='google'?'Continuar com Google':'Continuar com GitHub',exact:true}).click();
  await expect.poll(()=>new URL(page.url()).hostname,{timeout:45000}).toBe(provider==='google'?'accounts.google.com':'github.com');
  // A provider error page on the same host is not a successful redirect check.
- const identity=provider==='google'?page.locator('input[type="email"]'):page.getByLabel('Username or email address',{exact:true});
+ const identity=provider==='google'?page.locator('#identifierId'):page.getByLabel('Username or email address',{exact:true});
  try{await expect(identity).toBeVisible({timeout:15000})}catch(failure){
   const body=await page.locator('body').innerText();
   const categories=['invalid_client','redirect_uri_mismatch','access_denied','disallowed_useragent','org_internal','invalid_request'];
