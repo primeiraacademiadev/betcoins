@@ -7,4 +7,4 @@ export function highlightedCompetitors(rows:RankValue[],category?:MarketCategory
  return new Set(complete.filter(r=>r.value===target).map(r=>r.competitor_id));
 }
 export type ActivityEvent={id:string;at:string;kind:'offer'|'trade';label:string;side:'back'|'lay'|null;odds:number;stake:number|null;liability:number|null;state:'open'|'cancelled'|'filled'|null;stake_remaining:number|null};
-export type ActivityPage={events:ActivityEvent[];has_more:boolean;next_cursor:{at:string;id:string}|null;market_state:string;closes_at:string;resolution:{status:'settled';winner:string;resolved_at:string}|null};
+export type ActivityPage={events:ActivityEvent[];has_more:boolean;next_cursor:{at:string;id:string}|null;market_state:string;closes_at:string;resolution:{status:'settled'|'refunded';winner?:string;resolved_at:string}|null};

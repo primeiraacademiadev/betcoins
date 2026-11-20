@@ -103,3 +103,15 @@ Reversões e reabertura financeira ficam fora do MVP por decisão do operador.
 A #8 foi encerrada; backups e quotas ficaram adiados, sem os dar como confirmados.
 Duas modalidades e empate/zero bloqueado mantidos. Esta revisão não executa
 migrações no Supabase remoto nem confirma o estado de instalação remota.
+
+
+### Devolução por empate autorizada — migração 18
+
+Em 20/11/2026, o operador autorizou devolver o colateral ao mercado inteiro por
+empate relevante validado: stake BACK e responsabilidade LAY aos titulares atuais,
+sem desfazer revendas e sem tesouraria. A implementação está preparada na migração
+18 e na interface, com testes de SQL/concorrência e navegador em validação no CI.
+A autorização substitui referências anteriores a âmbito proposto ou falta de
+implementação. [Regras e operação](TIE_ZERO_PROPOSAL.md).
+Não foi instalada no Supabase remoto: servidores sem a migração 18 continuam a
+bloquear devoluções. Liquidação regular e duas modalidades preservadas.
