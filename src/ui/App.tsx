@@ -48,7 +48,9 @@ export function App(){
   let active=true,events=0;
   const initial=events;
   void client.auth.getUser().then(({data})=>{if(active&&events===initial)setUser(data.user)});
-  const {data:{subscription}}=client.auth.onAuthStateChange((_event,session)=>{
+  const {data:{subscription}}=client.auth.onAuthStateChange((event,session)=>{
+   // INITIAL_SESSION is cached; getUser verifies the initial identity instead.
+   if(event==='INITIAL_SESSION')return;
    events++;if(active)setUser(session?.user||null);
   });
   return()=>{active=false;subscription.unsubscribe()};
