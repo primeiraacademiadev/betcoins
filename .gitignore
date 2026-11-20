@@ -151,3 +151,8 @@ vite.config.ts.timestamp-*
 # Frozen exports generated from canonical migrations; never edit copied SQL.
 /supabase/baselines/20261115_full_install.sql
 /supabase/deploy/20261115_manual_upgrade_03_to_08.sql
+
+# Browser diagnostics and session state must not be committed.
+/test-results/
+/playwright-report/
+/.auth/

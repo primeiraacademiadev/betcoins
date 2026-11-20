@@ -43,6 +43,8 @@ export async function actor(browser:Browser,id:string,nickname:string){
   contentType:'application/json',body:JSON.stringify(user),
  }));
  await context.addInitScript(({user,access})=>{
+  if(sessionStorage.getItem('betcoins-fixture-initialized'))return;
+  sessionStorage.setItem('betcoins-fixture-initialized','1');
   localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:access,refresh_token:'unused-test-refresh',
    expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user}));
  },{user,access});

@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowRight, ChartNoAxesCombined, Check, CircleDollarSign, Coins, ExternalLink, LogIn, LogOut, Menu, Plus, RefreshCw, Shield, Trophy, Wallet as WalletIcon } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { client, configured, rpc, selectRows } from '../lib/supabase';
+import {observeVerifiedSession} from '../lib/authSession';
 import { useToast } from './ToastProvider';
 import { classifyError, errorFor, errorText, validateOdd, validateStake, validatePrice, validateYtd, validateDateRange } from '../lib/uxErrors';
 import { acceptanceTerms, formatCoins, positionPayoff, resaleLotStep, type PositionSale, type PositionSettlement, type Application, type Competitor, type LedgerEntry, type Listing, type Market, type Offer, type Outcome, type Position, type Ranking, type Wallet } from '../lib/domain';
@@ -42,7 +43,18 @@ async function getSpectatorRankings(asOf:string|null):Promise<Ranking[]> {
 function Coin({amount}:{amount:number}){return <span className="coin-amount"><span className="coin-glyph">฿</span> {formatCoins(amount)}</span>}
 function Button({children,onClick,disabled=false,subtle=false}:{children:ReactNode;onClick:()=>void;disabled?:boolean;subtle?:boolean}){return <button className={subtle?'button secondary':'button'} onClick={onClick} disabled={disabled}>{children}</button>}
 export function App(){
- const [user,setUser]=useState<User|null>(null),[tab,setTab]=useState<Tab>('overview'),[busy,setBusy]=useState(false),[authOpen,setAuthOpen]=useState(false);
+ const [user,setUser]=useState<User|null>(null);
+ useEffect(()=>{
+  if(!client)return;
+  return observeVerifiedSession(client.auth,setUser);
+ },[]);
+ // An identity change destroys all private data, form drafts and admin state.
+ return <SessionApp key={user?.id||'anonymous'} user={user}/>;
+}
+function SessionApp({user}:{user:User|null}){
+ const [tab,setTab]=useState<Tab>('overview'),[busy,setBusy]=useState(false),[authOpen,setAuthOpen]=useState(false);
+ const active=useRef(true);
+ useEffect(()=>{active.current=true;return()=>{active.current=false}},[]);
  const toast=useToast();
  const [competitors,setCompetitors]=useState<Competitor[]>([]),[markets,setMarkets]=useState<Market[]>([]),[outcomes,setOutcomes]=useState<Outcome[]>([]),[offers,setOffers]=useState<Offer[]>([]),[positions,setPositions]=useState<Position[]>([]),[listings,setListings]=useState<Listing[]>([]),[wallet,setWallet]=useState<Wallet|null>(null),[rankings,setRankings]=useState<Ranking[]>([]),[apps,setApps]=useState<Application[]>([]);
  const [profile,setProfile]=useState<{nickname:string}|null>(null);
@@ -60,13 +72,14 @@ export function App(){
  const [categoryFilter,setCategoryFilter]=useState('all');
  const [selectedDefinition,setSelectedDefinition]=useState(''),[selectedOccurrence,setSelectedOccurrence]=useState('');
  async function load(){
-  if(!client||!user)return;
+  if(!client||!user||!active.current)return;
   try {
    const [c,m,o,f,p,l,w,r,a,role] = await Promise.all([
      rpc<Competitor[]>('get_competitors'),selectRows<Market>('markets'),selectRows<Outcome>('outcomes'),
      selectRows<Offer>('offers'),selectRows<Position>('positions'),rpc<Listing[]>('get_active_listings'),
      rpc<Wallet>('get_wallet'),getSpectatorRankings(rankAsOf),rpc<Application[]>('get_applications'),rpc<{is_competitor:boolean;is_admin:boolean}>('my_roles')
    ]);
+   if(!active.current)return;
    const ownProfile=(await selectRows<{nickname:string}>('profiles',{column:'id',value:user.id}))[0]||null;setProfile(ownProfile);setNickname(ownProfile?.nickname||'');
    setSprints(await selectRows<Sprint>('sprints'));setChampionships(await selectRows<{id:string;name:string}>('championships'));setLedger(await selectRows<LedgerEntry>('ledger'));
    // Optional newer tables: preserve the existing wallet before Supabase migrations.
@@ -77,9 +90,8 @@ export function App(){
    setDefinitions(defs.status==='fulfilled'?defs.value:[]);setOccurrences(periods.status==='fulfilled'?periods.value:[]);
    setPositionSales(sales.status==='fulfilled'?sales.value:[]);
    setPositionSettlements(settled.status==='fulfilled'?settled.value:[]);setCompetitors(c||[]);setMarkets(m||[]);setOutcomes(o||[]);setOffers(f||[]);setPositions(p||[]);setListings(l||[]);setWallet(w);setRankings(r||[]);setApps(a||[]);setIsCompetitor(role?.is_competitor||false);setIsAdmin(role?.is_admin||false);
-  }catch(e){toast.error(errorText(classifyError(e)))}
+  }catch(e){if(active.current)toast.error(errorText(classifyError(e)))}
  }
- useEffect(()=>{if(!client)return;client.auth.getUser().then(({data})=>setUser(data.user));const {data:{subscription}}=client.auth.onAuthStateChange((_e,s)=>setUser(s?.user||null));return()=>subscription.unsubscribe()},[]);
  useEffect(()=>{setEntryBlocking(false);setFinalBlocking(false);if(user)void load();else {setWallet(null);setCompetitors([]);setProfile(null)}},[user]);
  async function act(fn:()=>Promise<unknown>, successMessage:string){setBusy(true);try{await fn();if(successMessage)toast.success(successMessage);await load()}catch(e){toast.error(errorText(classifyError(e)))}finally{setBusy(false)}}
  async function login(provider:'google'|'github'){if(!client)return;const {error}=await client.auth.signInWithOAuth({provider,options:{redirectTo:window.location.origin+import.meta.env.BASE_URL}});if(error)toast.error(errorText(classifyError(error)))}
