@@ -105,7 +105,7 @@ for group, scores in [('top', (20, 20, 3)), ('bottom', (20, 3, 3)), ('unique', (
         assert value(f"select count(*) from public.position_settlements s join public.positions p on p.id=s.position_id where p.market_id='{mid}' and (s.owner_id<>p.owner_id or s.settlement_kind<>'tie_refund' or s.payoff<>case when p.side='back' then p.stake else p.liability end or s.realized_pnl<>s.payoff-p.cost_basis)") == '0'
         assert value(f"select (count(*)=count(s.position_id))::text from public.positions p left join public.position_settlements s on s.position_id=p.id where p.market_id='{mid}'") == 'true'
         assert value(f"select sum(s.payoff) from public.position_settlements s join public.positions p on p.id=s.position_id where p.market_id='{mid}'") == '22.00'
-        assert value(f"select available_delta||':'||reserved_delta from public.ledger where reason='expire_offer' and reference='{m['offer']}'") == '5.00:-5.00'
+        assert value(f"select count(*)||':'||sum(available_delta)||':'||sum(reserved_delta) from public.ledger where reason in ('expire_offer','cancel_offer') and reference='{m['offer']}'") == '1:5.00:-5.00'
         if 'listing' in m:
             assert value(f"select seller_cost_basis||':'||sale_price||':'||realized_pnl from public.position_sales s join public.positions p on p.id=s.position_id where p.market_id='{mid}' and s.seller_id='{admin}'") == '10.00:7.00:-3.00'
             assert value(f"select payoff||':'||final_cost_basis||':'||realized_pnl from public.position_settlements s join public.positions p on p.id=s.position_id where p.market_id='{mid}' and s.owner_id='{buyer}'") == '5.00:3.50:1.50'
