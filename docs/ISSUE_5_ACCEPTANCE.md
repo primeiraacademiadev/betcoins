@@ -14,7 +14,7 @@ ou reconciliação legada. Reversões financeiras ficam fora do MVP.
 A #5 continua aberta pelo tratamento financeiro de empate/zero.
 O comportamento executável mantém-se: **empate/zero bloqueado**, sem pagamentos,
 devoluções, tesouraria ou vencedor escolhido manualmente.
-A [proposta financeira](TIE_ZERO_PROPOSAL.md) é uma decisão a rever antes de implementar.
+O [tratamento financeiro revisto](TIE_ZERO_PROPOSAL.md) devolve integralmente o colateral ao titular atual, por decisão do operador, sem desfazer revendas. Não está implementado.
 
 | Critério | Estado e evidência |
 | --- | --- |
@@ -26,7 +26,7 @@ A [proposta financeira](TIE_ZERO_PROPOSAL.md) é uma decisão a rever antes de i
 | Classificação e liquidação | Resultado validado e fontes congeladas; autorização administrativa, auditoria, imutabilidade e repetição sem pagamentos duplicados |
 | Duas modalidades | `snapshot_value`: YTD efetivo no fecho; `snapshot_delta_previous`: diferença em pp face ao original do fecho anterior, com exceção do baseline inicial aprovada na #11 |
 | Calendário e elegibilidade | Bets recorrentes, geração idempotente, entradas a meio do período, declarações finais/penalizações e resultados por ocorrência entregues na #11 |
-| Empate/zero | Bloqueado no servidor e interface; proposta financeira não implementada nem aprovada |
+| Empate/zero | Bloqueado no servidor e interface; devolução integral do colateral ao titular atual definida pelo operador, sem tesouraria ou reversão de revendas; implementação pendente |
 | Dados incompletos | Permanecem bloqueados; ausência de score, referência ou concorrentes suficientes não é zero |
 | Interface e segurança | Modalidade e motivos de bloqueio visíveis; sem seleção arbitrária de vencedor, nem escrita direta de saldos/ledger/posições |
 
@@ -49,10 +49,13 @@ quais migrações estão instaladas no Supabase.
 
 ## Próxima decisão da #5
 
-Rever a proposta de empate/zero: âmbito do empate relevante, perda de BACK e LAY,
-destino dos colaterais, P&L após revenda e comunicação antes da contratação.
+A decisão financeira é devolver stake BACK e responsabilidade LAY aos titulares
+atuais, sem desfazer revendas nem transferir valores para tesouraria. Rever o âmbito
+proposto do empate relevante no mercado inteiro, P&L por custo e comunicação antes
+da contratação.
 Só após aprovação se pode preparar implementação e testes específicos.
 Não ativar por esta revisão. Sem migrações remotas.
 
-Backups/quotas foram adiados no encerramento da #8; reversões/reabertura
-financeira ficam fora do MVP. Não são acrescentados à aceitação desta proposta.
+Backups/quotas foram adiados no encerramento da #8; reversões administrativas de
+liquidações, reabertura e desfazer revendas ficam fora do MVP. A devolução por empate
+é uma resolução específica agora definida, não uma reversão genérica.

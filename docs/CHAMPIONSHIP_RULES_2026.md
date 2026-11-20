@@ -30,11 +30,11 @@
 - Mercados têm outcomes explícitos, mutuamente exclusivos na resolução regular, e fecham na hora do servidor.
 - Uma oferta BACK representa posição a favor de um outcome; LAY é o lado contrário. Uma odd decimal 1,20 e stake BACK 10 ฿ implicam responsabilidade LAY 2 ฿; colateral total 12 ฿; sem taxas no MVP.
 - A aceitação P2P pode ser parcial dentro dos limites da oferta. A revenda de posições preserva colateral, risco, custo de aquisição e contabilidade; só há saída quando existe comprador.
-- **Regra de empate aprovada (analogia à roleta):** o empate equivale ao **zero** ao apostar em **preto ou vermelho**. Uma aposta a favor de qualquer dos dois resultados perde; **não há devolução automática de stake** apenas por empate.
-- **Exemplo:** num mercado «A vence / B vence», se A e B empatarem, quem apostou em A perde e quem apostou em B perde, como vermelho/preto perante o zero. Isto **não equivale** a declarar vencedor um dos dois outcomes nem a anular o mercado.
-- **Lacuna técnica bloqueante:** o settlement P2P atual é binário BACK/LAY: escolhe um `winner_outcome_id` e atribui a soma dos colaterais a um dos lados; a totalidade de BetCoins em circulação é conservada. Não existe ainda terceiro resultado «empate / zero», nem carteira de tesouraria que receba a perda de ambos. **Não utilizar `settle_market` para fingir que esta regra já está suportada.**
-- **Decisão técnica pendente:** definir e implementar destino das perdas de ambos os lados sem criar/destruir BetCoins (por exemplo, carteira técnica/tesouraria da plataforma), elegibilidade de quem pode participar nessa contraparte e contabilização no P&L. Exige desenho, migração, testes concorrentes e revisão antes de ativar mercados que possam empatar.
-- **Distinguir de anulação:** `void` por falha técnica, retirada/desistência ou resultado não validável é um mecanismo diferente de **empate desportivo/competitivo**. Política de cancelamento/devolução e efeito sobre revendas anteriores ainda necessita de validação.
+- **Regra de empate revista pelo operador em 20/11/2026:** devolução integral do colateral aos titulares atuais: stake BACK e responsabilidade LAY. Substitui a anterior regra de perdas de ambos os lados. Não está implementada; empate/zero continua bloqueado.
+- **Exemplo confirmado:** stake 10 ฿, odd 1,20: BACK recebe 10, LAY recebe 2 e tesouraria recebe 0. Se BACK tiver sido vendido por 7, o comprador recebe os 10 de colateral e realiza +3; o vendedor mantém −3. Revendas não são desfeitas.
+- **Lacuna técnica bloqueante:** o settlement P2P atual é binário BACK/LAY: escolhe um `winner_outcome_id` e atribui a soma dos colaterais a um dos lados; a totalidade de BetCoins em circulação é conservada. Não existe ainda resolução por empate com devolução integral. A decisão revista não exige tesouraria. **Não utilizar `settle_market` para fingir que esta regra já está suportada.**
+- **Próxima revisão:** âmbito do empate relevante no mercado inteiro e implementação futura da devolução ao titular atual, com P&L pelo custo de aquisição. Sem emissão, queima ou tesouraria. Ver [tratamento financeiro](TIE_ZERO_PROPOSAL.md). Só implementar após autorização e testes; sem migrações remotas nesta revisão.
+- **Distinguir de anulação:** `void` por falha técnica, retirada/desistência ou resultado não validável é um mecanismo diferente de **empate desportivo/competitivo**. A decisão revista devolve colateral por empate sem desfazer revendas. Políticas para falhas técnicas/retiradas não são decididas por essa regra.
 
 ## 4. Liquidação, transparência e rankings
 
@@ -52,7 +52,7 @@
 | Votação por maioria absoluta | Eleitorado congelado | Implementado |
 | Duas modalidades: snapshot absoluto e Δ do anterior | Aprovadas como regra de produto | Implementadas no código/migração 11, com validação e liquidação regular; instalação remota pendente. Geração recorrente continua na #11 |
 | ΔYTD aritmético do sprint | Diferença de snapshots em p.p. | Implementado para start/end do mesmo sprint |
-| Empate como zero na roleta | Ambas as apostas preto/vermelho perdem | **Por implementar**: conservação e destinatário das perdas |
+| Empate — decisão revista | Devolver stake BACK e responsabilidade LAY ao titular atual, sem desfazer revendas | **Por implementar**: bloqueado; tesouraria recebe zero |
 | Revenda parcial por lotes | Proporções e cêntimos exatos | Implementado |
 | Créditos iniciais e semanais | 1 000 ฿, com elegibilidade | Implementado |
 | Captura automática, ausência, penalização, timezone | Validar regras | Pendente |
@@ -62,7 +62,7 @@
 ## 6. Critérios para próximos tickets
 
 1. Tipos explícitos `snapshot_value` e `snapshot_delta_previous` preparados na migração 11, com fontes por período e testes 12,00% → 16,50%. Instalação remota e geração recorrente são etapas separadas.
-2. Resolver tecnicamente **empate/zero** em P2P sem violar invariantes de conservação, com uma decisão clara sobre a tesouraria. Não confundir zero com anulação/void.
+2. Preparar, após revisão/autorização, devolução integral de colateral por **empate/zero** ao titular atual. Não criar tesouraria nem desfazer revendas; manter bloqueado até implementar/testar.
 3. Validar com os jogadores as regras ainda pendentes e atualizar a UI/termos do campeonato quando forem acordadas.
 
 **Este documento fecha o trabalho de inventariar e fixar as regras conhecidas da E0, mas não representa aprovação das decisões identificadas como pendentes nem implementação das lacunas técnicas.**
@@ -93,12 +93,11 @@ descritas nas secções históricas anteriores foram entregues; a #11 está ence
 Não existe requisito de compatibilidade legada. A [matriz atual da #5](ISSUE_5_ACCEPTANCE.md)
 substitui listas antigas de pendências dessas entregas.
 
-A regra aprovada de empate/zero continua **bloqueada no motor**, sem pagamentos,
-devoluções ou tesouraria. A [proposta financeira BACK/LAY](TIE_ZERO_PROPOSAL.md)
-recomenda zero ao mercado inteiro por empate relevante, perda da stake BACK e da
-responsabilidade LAY e transferência para uma conta técnica que retém os valores.
-Explicita também o custo/P&L após revenda e a condição de não pagar LAY perante zero.
-Essas escolhas são propostas a aprovar, não regras já aprovadas ou implementadas.
+A regra revista pelo operador devolve integralmente o colateral ao titular atual:
+stake BACK e responsabilidade LAY; tesouraria recebe zero. Revendas não são desfeitas.
+O [tratamento financeiro BACK/LAY](TIE_ZERO_PROPOSAL.md) substitui a proposta rejeitada
+de perdas e tesouraria. O âmbito de mercado inteiro continua como proposta a rever.
+O motor continua **bloqueado**, sem implementar devoluções por esta revisão.
 
 Reversões e reabertura financeira ficam fora do MVP por decisão do operador.
 A #8 foi encerrada; backups e quotas ficaram adiados, sem os dar como confirmados.

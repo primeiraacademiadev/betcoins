@@ -20,7 +20,7 @@ Na plataforma, **Continuar com Google** ou **Continuar com GitHub** permite entr
 - Todos os participantes com acesso elegível começam com **1 000 BetCoins**.
 - Os **espectadores recebem mais 1 000 BetCoins por semana**, creditados uma única vez por semana.
 - Mercados para prever **1.º, 2.º e último lugar**, tanto no campeonato anual como, quando aplicável, nos sprints.
-- **Mercado P2P:** as pessoas publicam ofertas com odds e valores; outras aceitam. A plataforma não banca apostas e não cria dinheiro nas liquidações. **Empate como zero na roleta:** apostas em ambos os lados perdem; esta regra exige um modelo de tesouraria e ainda **não está implementada no settlement**, pelo que não se devem liquidar empates pela função binária atual.
+- **Mercado P2P:** as pessoas publicam ofertas com odds e valores; outras aceitam. A plataforma não banca apostas e não cria dinheiro nas liquidações. **Empate — decisão revista em 20/11/2026:** devolução integral do colateral ao titular atual: stake BACK e responsabilidade LAY, sem desfazer revendas e sem tesouraria. Ainda **não implementada**; empate/zero continua bloqueado e não se deve liquidar pela função binária atual.
 - **Saída antecipada por revenda da posição (mercado secundário)**: o titular oferece a posição (ou parte dela) a outro participante. Só há saída quando alguém a compra; o risco, os direitos económicos e as reservas correspondentes são transferidos atomicamente.
 - **Mercados em funcionamento durante o campeonato**, até ao instante de corte definido para cada mercado; não impomos fecho antecipado só porque o resultado parece previsível.
 - Ordens podem ficar sem contraparte; não há preço nem liquidez garantidos. A exposição máxima deve estar sempre coberta por BetCoins reservados.
@@ -48,7 +48,7 @@ O apuramento auditado e a validação final E2 estão preparados na **migração
 
 **Princípio:** é para brincar; as regras devem ser claras, o dinheiro é fictício e ninguém deve conseguir criar BetCoins ou alterar uma aposta através das ferramentas do browser.
 
-Mercados P2P #5: fluxo regular, duas modalidades, calendário recorrente e liquidação validada implementados e testados no código. Empate/zero continua bloqueado. A [matriz atual](docs/ISSUE_5_ACCEPTANCE.md) distingue entregas concluídas da [proposta financeira BACK/LAY](docs/TIE_ZERO_PROPOSAL.md), ainda por aprovar e implementar. Não existe tesouraria ativa nem compatibilidade legada exigida; reversões ficam fora do MVP. Esta revisão não executa nem confirma instalações remotas.
+Mercados P2P #5: fluxo regular, duas modalidades, calendário recorrente e liquidação validada implementados e testados no código. Empate/zero continua bloqueado. A [matriz atual](docs/ISSUE_5_ACCEPTANCE.md) distingue entregas concluídas do [tratamento financeiro BACK/LAY revisto](docs/TIE_ZERO_PROPOSAL.md): devolução integral do colateral ao titular atual definida pelo operador, sem desfazer revendas; âmbito de mercado inteiro proposto e implementação pendente. Não é necessária tesouraria nem compatibilidade legada; reversões administrativas ficam fora do MVP. Esta revisão não executa nem confirma instalações remotas.
 
 As [duas modalidades da regra #1](docs/SNAPSHOT_MARKET_MODES.md) estão preparadas na **migração 11, apenas versionada**, dependente de 01–10. Empate/zero continua bloqueado; mercados anteriores mantêm os critérios legados.
 

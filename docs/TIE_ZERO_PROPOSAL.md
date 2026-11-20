@@ -1,130 +1,130 @@
-# #5 — proposta de empate/zero em BACK/LAY
+# #5 — devolução integral de colateral em empate/zero
 
-Estado em 20/11/2026: **proposta para aprovação, não implementada**.
-Empate/zero continua bloqueado. Nenhuma migração ou alteração financeira é
-executada por este documento. Mantêm-se as duas modalidades existentes.
+Decisão do operador em 20/11/2026: devolver integralmente o colateral ao
+**titular atual**, sem desfazer revendas. Tesouraria recebe zero.
+A anterior proposta de perda dos dois lados e transferência para tesouraria foi
+rejeitada e substituída por esta decisão.
 
-## Regra proposta
+Estado técnico: **não implementado; empate/zero continua bloqueado**.
+Este documento não autoriza implementação ou instalação. Mantêm-se as duas
+modalidades; nenhuma migração remota é executada.
 
-Tratar zero como terceiro estado de resolução, distinto de um outcome vencedor
-e de anulação. Na resolução regular, BACK ganha quando o outcome escolhido vence;
-LAY ganha quando existe outro vencedor único. No zero, ambos perdem o colateral
-da parte correspondida: stake de BACK e responsabilidade de LAY.
+## Regra financeira definida
 
-Isto exige tornar explícita a condição do LAY: apostar contra um outcome só paga
-perante uma resolução regular a favor de outro outcome. O empate não passa a ser
-uma vitória do LAY. Essa condição deve ser visível antes de colocar/aceitar ofertas
-e antes de comprar uma posição.
+No empate relevante, devolver a stake reservada de BACK e a responsabilidade
+reservada de LAY aos titulares atuais dos respetivos lotes. Não há vencedor,
+ganho regular de aposta, perda de colateral, taxa ou transferência para tesouraria.
+Não criar nem destruir BetCoins.
 
-Proponho aplicar zero ao **mercado inteiro** quando o lugar que esse mercado
-prevê não tem resultado único por empate relevante. Nesse mercado, todas as
-posições correspondidas perdem, mesmo as relativas a concorrentes fora do empate.
-Não aplicar zero apenas a alguns contratos dentro do mesmo mercado.
+LAY não ganha o total dos dois colaterais por ter apostado contra um outcome
+empatado: recebe apenas a responsabilidade que lhe pertence. BACK recebe apenas
+a sua stake. As liquidações regulares com vencedor único não mudam.
 
-- Primeiro lugar partilhado: zero no mercado de primeiro.
-- Último lugar partilhado: zero no mercado de último.
-- Ranking 1,1,3: zero no mercado de segundo, pois o lugar falta devido ao empate.
+A devolução é integral quanto ao colateral; não significa voltar à titularidade
+original, desfazer compras/vendas ou garantir P&L zero a quem comprou uma posição.
+As operações de revenda já concluídas mantêm preço, titularidade e P&L realizado.
+
+Esta decisão substitui a antiga regra documental de «ambos perdem como zero da
+roleta». O nome empate/zero pode identificar o motivo, mas a interface deve dizer
+explicitamente «devolução integral do colateral ao titular atual».
+
+## Âmbito proposto para o empate
+
+Aplicar a devolução ao **mercado inteiro** quando o lugar que esse mercado prevê
+não tem resultado único por empate relevante, incluindo posições relativas a
+concorrentes fora do empate. Este âmbito continua como proposta a rever; a
+confirmação do operador fixou os pagamentos e os destinatários, não este detalhe.
+
+- Primeiro lugar partilhado: devolver no mercado de primeiro.
+- Último lugar partilhado: devolver no mercado de último.
+- Ranking 1,1,3: devolver no mercado de segundo, inexistente devido ao empate.
 - Empate apenas noutro lugar, sem afetar o lugar previsto: resolução regular.
 - Falta de score/referência, ausência de validação ou participantes insuficientes:
-  continuar bloqueado; não converter em zero.
-- Aplicar o mesmo critério nas modalidades de valor e diferença. Usar a
-  classificação validada e congelada própria do mercado; nunca YTD corrente.
+  continuar bloqueado; não assumir que há empate.
+- Usar a classificação validada e congelada própria da modalidade
+  `snapshot_value` ou `snapshot_delta_previous`, nunca YTD corrente.
 
-O âmbito de mercado inteiro e o comportamento LAY são decisões propostas
-explicitamente, não consequências já aprovadas da expressão «zero da roleta».
+A resolução por empate deve ser explícita e auditada, sem inventar um outcome
+vencedor nem permitir que o administrador a use para corrigir resultados livremente.
 
-## Destino dos valores
-
-Criar, numa implementação futura aprovada, uma conta técnica de tesouraria que
-receba exatamente os colaterais perdidos. Não queimar nem emitir BetCoins.
-A plataforma continua sem financiar ganhos ou oferecer contraparte: a tesouraria
-apenas recebe o valor de zero; não publica ofertas, negoceia nem recebe dotações.
-
-Proponho que os valores fiquem retidos nessa conta, sem levantamentos, distribuição
-ou reutilização automática. Um destino posterior exige decisão separada.
-A conta não tem login de jogador, não entra nos rankings e não é carteira pessoal
-de um administrador. Os movimentos e total recebido devem ser auditáveis.
-
-Reservas de ofertas não correspondidas não são apostas perdidas: libertar apenas
-o remanescente, como na liquidação regular. Posições ainda anunciadas para revenda
-pertencem ao titular atual; anúncios sem compra concluída expiram/cancelam, sem
-criar pagamento ou dupla libertação de colateral.
-
-## Exemplo completo
+## Exemplo sem revenda
 
 Stake BACK 10 ฿, odd 1,20 e responsabilidade LAY 2 ฿; total reservado 12 ฿.
-Valores abaixo são pagamentos da liquidação, sem considerar revendas.
 
 | Resolução | BACK recebe | LAY recebe | Tesouraria recebe | P&L BACK / LAY |
 | --- | ---: | ---: | ---: | --- |
 | Outcome escolhido vence | 12 | 0 | 0 | +2 / −2 |
-| Outro outcome vence, sem zero | 0 | 12 | 0 | −10 / +10 |
-| Empate/zero relevante | 0 | 0 | 12 | −10 / −2 |
+| Outro outcome vence | 0 | 12 | 0 | −10 / +10 |
+| Empate relevante | 10 | 2 | 0 | 0 / 0 |
 
-No zero, a reserva de BACK diminui 10 e a de LAY diminui 2; o saldo disponível
-dos jogadores não sofre novo débito, porque o risco já foi reservado. O disponível
-da tesouraria aumenta 12. A soma de disponível + reservado de todas as carteiras,
-incluindo a tesouraria, mantém-se. Não se deve debitar duas vezes a mesma perda.
-
-Os rankings de jogadores podem perder património agregado por transferência
-para a tesouraria; a reconciliação global deve incluí-la. Não apresentar essa
-transferência como emissão, taxa regular ou perda inexplicada de moeda.
+Na devolução, a reserva de BACK diminui 10 e o seu disponível aumenta 10; a
+reserva de LAY diminui 2 e o seu disponível aumenta 2. Não há novo débito,
+emissão ou crédito de tesouraria. A soma disponível + reservado mantém-se
+por titular e globalmente neste exemplo.
 
 ## Revenda, custo e P&L
 
-O risco e o pagamento pertencem ao titular atual de cada lote. No zero,
-pagamento final = 0 e P&L final = −custo de aquisição do lote, de acordo com
-a contabilidade já existente. Não confundir custo de aquisição com colateral.
+Cada lote recebe o respetivo colateral no titular atual: stake no lado BACK,
+responsabilidade no lado LAY. P&L final = colateral devolvido − custo de
+aquisição do lote. Não confundir preço da revenda com colateral.
 
-Exemplo: BACK inicial com custo 10 é vendido integralmente por 7. O vendedor
-realizou −3; o comprador tem custo 7. Se houver zero, o comprador recebe 0 e
-realiza −7. A tesouraria recebe os 10 de colateral BACK e os 2 de LAY, não os 7
-da compra, que já foram pagos ao vendedor. O P&L da venda não é revertido.
+Exemplo confirmado pelo operador: BACK inicial com custo 10 vendido por 7.
+O vendedor mantém P&L realizado de −3; o comprador tem custo 7, recebe os 10
+de colateral e realiza +3. A revenda não é desfeita e o preço 7 não é devolvido.
+O lado LAY recebe os seus 2; a tesouraria recebe 0. A soma de P&L desta cadeia
+BACK é zero (−3 + 3); os resultados individuais continuam diferentes.
 
-Revendas parciais conservam os lotes e a precisão monetária existentes: zero
-liquida cada lote uma única vez ao titular final. Somar custos/perdas não substitui
-a reconciliação dos colaterais e transferências efetivas.
+O mesmo critério aplica-se a LAY: um lote com responsabilidade 2 comprado por
+1,50 recebe 2 e realiza +0,50; a venda anterior mantém o seu resultado.
+Revendas sucessivas ou parciais preservam todos os preços e custos: cada lote
+paga apenas o colateral que lhe corresponde, uma vez, ao titular final.
+
+Ofertas não correspondidas libertam o remanescente reservado como já sucede.
+Anúncios de revenda sem compra concluída não mudam titularidade; devem terminar
+sem novos pagamentos, devoluções de preço ou dupla libertação de reservas.
 
 ## Condições de implementação futura
 
-1. Aprovar as decisões deste documento antes de alterar código ou esquema.
-   Depois, explicitar a regra nos termos e nas confirmações BACK/LAY/revenda.
-   Não mudar silenciosamente condições de posições já contratadas; posições
-   sem essa condição aceite permanecem bloqueadas para zero. Dados só de teste
-   podem ser descartados numa operação identificada, sem criar compatibilidade legada.
-2. Persistir resolução zero explícita, fonte validada, versão da regra, administrador,
-   data, titulares/lotes e movimentos de tesouraria; nunca inventar vencedor.
-3. Transferir reservas e registar P&L numa transação única com autorização,
-   locks, precisão e idempotência equivalentes à liquidação regular.
-   Falta da conta técnica ou de invariantes deve falhar sem alterações parciais.
-4. Impedir escrita direta, emissão/dotações e negociação pela tesouraria;
-   mostrar aos jogadores perda possível, motivo e valor da resolução zero.
-5. Manter ausência de dados e decisões não validadas bloqueadas. Zero não é
-   uma ferramenta administrativa para resolver incidentes ou corrigir resultados.
-   Reversões e reabertura financeira ficam fora do MVP.
+1. Rever o âmbito do empate acima e apresentar claramente a regra de devolução
+   antes de BACK/LAY/compra. Não alterar silenciosamente condições de apostas
+   existentes; enquanto não houver implementação aprovada, mantém-se bloqueado.
+   Dados só de teste podem ser descartados numa operação identificada; não existe
+   obrigação de compatibilidade legada.
+2. Persistir motivo de devolução, fonte validada, administrador, data,
+   titulares/lotes, colaterais, custos e movimentos compensatórios. Manter ledger
+   e histórico imutáveis: registar a devolução, não apagar o negócio.
+3. Libertar reservas, creditar os titulares atuais e registar P&L numa única
+   transação autorizada, com locks, precisão e idempotência. Falha de invariantes
+   não pode deixar devoluções parciais ou saldos negativos.
+4. Não criar conta de tesouraria para este fluxo, nem usar emissão/dotações para
+   pagar a devolução. O pagamento vem exclusivamente do colateral já reservado.
+5. Manter dados incompletos e classificações não validadas bloqueados.
+   Reversão administrativa de liquidações, reabertura e desfazer revendas continuam
+   fora do MVP. A devolução por empate aqui definida é uma resolução específica,
+   não uma autorização genérica de reversão.
 
-## Testes necessários após aprovação
+## Testes necessários após aprovação da implementação
 
 Estes são critérios futuros, não testes novos já executados:
 
 - Duas modalidades × três lugares: empate relevante, empate irrelevante,
   1,1,3 e último partilhado; ausências e universo insuficiente continuam bloqueados.
-- Exemplo 10/1,20/2 e outros valores/lotes válidos: pagamento zero a ambos,
-  tesouraria exata, reservas libertadas e moeda conservada sem novo débito.
-- Ofertas parcialmente aceites: apenas colateral correspondido transferido;
-  remanescente devolvido uma vez. Zero sem negócios não gera receita.
-- Revenda integral/parcial e titulares distintos em cada lado: P&L por custo,
-  vendas anteriores intactas, anúncios sem dupla utilização de reservas.
-- Liquidações repetidas/concorrentes, corrida com cancelamento e compra no corte:
-  uma resolução, nenhuma receita duplicada, falha integral se inválido.
-- Autorização/RLS, conta técnica excluída de dotações/rankings/negociação,
-  reconciliação incluindo tesouraria e auditoria legível.
-- Interface nas duas larguras: termos e risco antes de BACK/LAY/compra,
-  apresentação do zero e regressão da liquidação regular.
+- Exemplo 10/1,20/2: BACK recebe 10, LAY 2, tesouraria 0; reservas chegam a zero,
+  disponíveis reconciliam e moeda é conservada. Sem revendas, P&L de ambos é zero.
+- Ofertas parcialmente aceites: devolver exatamente colateral correspondido e
+  remanescente reservado, sem duplicação. Mercado sem negócios não cria movimentos
+  financeiros fictícios.
+- BACK de 10 vendido por 7: vendedor mantém −3, comprador recebe 10 e realiza +3.
+  Cobrir também LAY, cadeias e lotes parciais, titulares distintos e arredondamentos.
+- Anúncios de revenda terminam sem devolver preços de compras já executadas.
+- Devoluções repetidas/concorrentes e corrida com cancelamento/compra no corte:
+  uma resolução, nenhuma devolução duplicada, falha integral se inválido.
+- Autorização/RLS, ledger imutável, auditoria e reconciliação por carteira/global.
+- Interface desktop/telemóvel mostra o colateral devolvido e distingue-o de
+  lucro/preço de aquisição; regressão completa da liquidação regular.
 
-## Decisões a aprovar
+## Próximo passo
 
-A recomendação é: zero ao mercado inteiro apenas por empate relevante; BACK e
-LAY perdem o respetivo colateral; conta técnica recebe e retém o total; P&L dos
-titulares segue o custo; sem devolução, emissão ou reversão. Até haver aprovação,
-implementação, testes e instalação autorizada, o comportamento mantém-se bloqueado.
+Pagamentos e titular atual estão definidos pelo operador. Rever o âmbito
+proposto de mercado inteiro e, só após autorização, preparar implementação e
+testes. Até lá, manter empate/zero bloqueado e as duas modalidades existentes.
