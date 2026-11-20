@@ -21,4 +21,11 @@ describe('validated settlement presentation',()=>{
  it('does not interpret an unknown status as permission to settle',()=>{
   expect(resolutionMessage('new_state')).toContain('indisponível');
  });
+ it.each(['ready_refund','refunded'])('explains %s without choosing a winner or unwinding resales',status=>{
+  const html=renderToStaticMarkup(<ResolutionDetails result={{status,criterion:'snapshot_value'}} winner="Vencedor inventado"/>);
+  expect(html).toContain('titulares atuais');
+  expect(html).toContain('revendas');
+  expect(html).not.toContain('Vencedor inventado');
+  expect(html).not.toContain('Resultado validado:');
+ });
 });

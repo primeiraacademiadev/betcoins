@@ -71,3 +71,15 @@ Operação #8: [matriz de aceitação](docs/ISSUE_8_ACCEPTANCE.md) e [backup, re
 Testes #8: [fluxos financeiros no navegador](docs/FINANCIAL_BROWSER_TESTS.md), com a aplicação completa, PostgREST/PostgreSQL locais, duas modalidades e larguras desktop/telemóvel. Identidades de teste controladas; operações financeiras reais, sem migrações no Supabase remoto.
 
 OAuth #8: [redirecionamentos reais, ensaio assistido e limpeza da sessão](docs/OAUTH_VALIDATION.md). O operador confirmou entrada/regresso, persistência após recarregar e saída seguida de recarregamento com GitHub e Google em 20/11/2026. Esta validação manual é distinta do preflight e das regressões com identidade controlada. Cancelamento no consentimento do fornecedor não é requisito adicional.
+
+
+### Devolução por empate autorizada — migração 18
+
+Em 20/11/2026, o operador autorizou devolver o colateral ao mercado inteiro por
+empate relevante validado: stake BACK e responsabilidade LAY aos titulares atuais,
+sem desfazer revendas e sem tesouraria. A implementação está preparada na migração
+18 e na interface, com testes de SQL/concorrência e navegador em validação no CI.
+A autorização substitui referências anteriores a âmbito proposto ou falta de
+implementação. [Regras e operação](docs/TIE_ZERO_PROPOSAL.md).
+Não foi instalada no Supabase remoto: servidores sem a migração 18 continuam a
+bloquear devoluções. Liquidação regular e duas modalidades preservadas.

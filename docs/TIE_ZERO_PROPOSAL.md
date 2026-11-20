@@ -5,8 +5,9 @@ Decisão do operador em 20/11/2026: devolver integralmente o colateral ao
 A anterior proposta de perda dos dois lados e transferência para tesouraria foi
 rejeitada e substituída por esta decisão.
 
-Estado técnico: **não implementado; empate/zero continua bloqueado**.
-Este documento não autoriza implementação ou instalação. Mantêm-se as duas
+Estado técnico: implementação preparada na migração 18 e na interface, por
+autorização do operador em 20/11/2026; validação em CI em curso. Sem instalação
+remota: antes da migração 18, o servidor continua a bloquear empate/zero. Mantêm-se as duas
 modalidades; nenhuma migração remota é executada.
 
 ## Regra financeira definida
@@ -28,12 +29,12 @@ Esta decisão substitui a antiga regra documental de «ambos perdem como zero da
 roleta». O nome empate/zero pode identificar o motivo, mas a interface deve dizer
 explicitamente «devolução integral do colateral ao titular atual».
 
-## Âmbito proposto para o empate
+## Âmbito aprovado para o empate
 
 Aplicar a devolução ao **mercado inteiro** quando o lugar que esse mercado prevê
 não tem resultado único por empate relevante, incluindo posições relativas a
-concorrentes fora do empate. Este âmbito continua como proposta a rever; a
-confirmação do operador fixou os pagamentos e os destinatários, não este detalhe.
+concorrentes fora do empate. O operador autorizou expressamente a aplicação ao mercado inteiro em
+20/11/2026, mantendo pagamentos e titularidade atuais.
 
 - Primeiro lugar partilhado: devolver no mercado de primeiro.
 - Último lugar partilhado: devolver no mercado de último.
@@ -83,11 +84,11 @@ Ofertas não correspondidas libertam o remanescente reservado como já sucede.
 Anúncios de revenda sem compra concluída não mudam titularidade; devem terminar
 sem novos pagamentos, devoluções de preço ou dupla libertação de reservas.
 
-## Condições de implementação futura
+## Implementação preparada e invariantes
 
-1. Rever o âmbito do empate acima e apresentar claramente a regra de devolução
+1. Aplicar o âmbito aprovado acima e apresentar claramente a regra de devolução
    antes de BACK/LAY/compra. Não alterar silenciosamente condições de apostas
-   existentes; enquanto não houver implementação aprovada, mantém-se bloqueado.
+   existentes; sem instalação da migração 18, a devolução permanece bloqueada no servidor.
    Dados só de teste podem ser descartados numa operação identificada; não existe
    obrigação de compatibilidade legada.
 2. Persistir motivo de devolução, fonte validada, administrador, data,
@@ -103,9 +104,12 @@ sem novos pagamentos, devoluções de preço ou dupla libertação de reservas.
    fora do MVP. A devolução por empate aqui definida é uma resolução específica,
    não uma autorização genérica de reversão.
 
-## Testes necessários após aprovação da implementação
+## Verificação
 
-Estes são critérios futuros, não testes novos já executados:
+`tests/db/tie_refunds_concurrency.py` cobre fontes reais, duas modalidades e três
+lugares nos três percursos de instalação do CI. Os fluxos financeiros no navegador
+cobrem devolução e P&L após revenda a 1280/390 px. A confirmação dos resultados
+depende da conclusão do CI deste PR; os critérios são:
 
 - Duas modalidades × três lugares: empate relevante, empate irrelevante,
   1,1,3 e último partilhado; ausências e universo insuficiente continuam bloqueados.
@@ -123,8 +127,14 @@ Estes são critérios futuros, não testes novos já executados:
 - Interface desktop/telemóvel mostra o colateral devolvido e distingue-o de
   lucro/preço de aquisição; regressão completa da liquidação regular.
 
-## Próximo passo
+## Instalação e limite
 
-Pagamentos e titular atual estão definidos pelo operador. Rever o âmbito
-proposto de mercado inteiro e, só após autorização, preparar implementação e
-testes. Até lá, manter empate/zero bloqueado e as duas modalidades existentes.
+Migração `202611200001_tie_refunds.sql`, dependente de 01–17, apenas versionada.
+A RPC administrativa `refund_tied_market` exige fecho e empate relevante validado;
+é idempotente. A liquidação regular continua separada e rejeita empate.
+`market_resolutions.resolution_kind` e `position_settlements.settlement_kind`
+identificam `tie_refund`, sem vencedor inventado nem tesouraria.
+
+Nenhuma migração foi executada no Supabase remoto. CI e publicação do frontend
+não instalam SQL; não apresentar a migração como instalada. As duas modalidades
+são preservadas. Reversões administrativas de liquidações continuam fora do MVP.

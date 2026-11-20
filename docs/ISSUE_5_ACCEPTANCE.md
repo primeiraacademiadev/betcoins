@@ -11,10 +11,11 @@ validação e liquidação idempotente. As duas modalidades e as bets recorrente
 já foram entregues; a #11 está encerrada. Não existe requisito de compatibilidade
 ou reconciliação legada. Reversões financeiras ficam fora do MVP.
 
-A #5 continua aberta pelo tratamento financeiro de empate/zero.
-O comportamento executável mantém-se: **empate/zero bloqueado**, sem pagamentos,
-devoluções, tesouraria ou vencedor escolhido manualmente.
-O [tratamento financeiro revisto](TIE_ZERO_PROPOSAL.md) devolve integralmente o colateral ao titular atual, por decisão do operador, sem desfazer revendas. Não está implementado.
+A #5 acompanha agora a implementação autorizada de devolução por empate ao mercado inteiro (migração 18).
+Na versão anterior à migração 18, empate/zero continua bloqueado. Com a migração
+18 instalada num ambiente autorizado, a RPC própria devolve colateral ao titular
+atual após classificação validada; sem tesouraria ou vencedor escolhido manualmente.
+O [tratamento financeiro revisto](TIE_ZERO_PROPOSAL.md) devolve integralmente o colateral ao titular atual, por decisão do operador, sem desfazer revendas. Implementação preparada no código e na migração 18; sem execução remota.
 
 | Critério | Estado e evidência |
 | --- | --- |
@@ -26,7 +27,7 @@ O [tratamento financeiro revisto](TIE_ZERO_PROPOSAL.md) devolve integralmente o 
 | Classificação e liquidação | Resultado validado e fontes congeladas; autorização administrativa, auditoria, imutabilidade e repetição sem pagamentos duplicados |
 | Duas modalidades | `snapshot_value`: YTD efetivo no fecho; `snapshot_delta_previous`: diferença em pp face ao original do fecho anterior, com exceção do baseline inicial aprovada na #11 |
 | Calendário e elegibilidade | Bets recorrentes, geração idempotente, entradas a meio do período, declarações finais/penalizações e resultados por ocorrência entregues na #11 |
-| Empate/zero | Bloqueado no servidor e interface; devolução integral do colateral ao titular atual definida pelo operador, sem tesouraria ou reversão de revendas; implementação pendente |
+| Empate/zero | Migração 18 e RPC `refund_tied_market`: devolução ao mercado inteiro, aos titulares atuais, sem desfazer revendas. Sem migração instalada, mantém bloqueio. CI de devolução/concorrência e navegador em validação |
 | Dados incompletos | Permanecem bloqueados; ausência de score, referência ou concorrentes suficientes não é zero |
 | Interface e segurança | Modalidade e motivos de bloqueio visíveis; sem seleção arbitrária de vencedor, nem escrita direta de saldos/ledger/posições |
 
@@ -40,22 +41,22 @@ O [tratamento financeiro revisto](TIE_ZERO_PROPOSAL.md) devolve integralmente o 
   PostgREST/PostgreSQL reais no CI, duas modalidades e larguras 1280/390 px.
 - PRs #43–#45 integrados; CI de main verde em
   [5efc0fe](https://github.com/primeiraacademiadev/betcoins/actions/runs/44724549155).
-  Os testes existentes demonstram o bloqueio do empate, não uma liquidação de zero.
+  As suites históricas anteriores à migração 18 demonstram o bloqueio. A nova
+  suite `tie_refunds_concurrency.py` testa a devolução autorizada após a migração 18.
 
 Os percursos históricos de migração testam a evolução do esquema.
 Não criam obrigação de compatibilidade de produto. Esta revisão não consulta
 nem altera o esquema remoto: publicação do frontend e CI verde não comprovam
 quais migrações estão instaladas no Supabase.
 
-## Próxima decisão da #5
+## Entrega da devolução por empate
 
-A decisão financeira é devolver stake BACK e responsabilidade LAY aos titulares
-atuais, sem desfazer revendas nem transferir valores para tesouraria. Rever o âmbito
-proposto do empate relevante no mercado inteiro, P&L por custo e comunicação antes
-da contratação.
-Só após aprovação se pode preparar implementação e testes específicos.
-Não ativar por esta revisão. Sem migrações remotas.
+O operador autorizou aplicar a devolução ao mercado inteiro: stake BACK e
+responsabilidade LAY aos titulares atuais, sem desfazer revendas. Implementação
+preparada na migração `202611200001_tie_refunds.sql` e na interface. Testes em CI
+cobrem colaterais, lotes/revendas, P&L, idempotência, autorização, concorrência,
+liquidação regular e histórico. Confirmar CI antes de integrar a implementação.
 
-Backups/quotas foram adiados no encerramento da #8; reversões administrativas de
-liquidações, reabertura e desfazer revendas ficam fora do MVP. A devolução por empate
-é uma resolução específica agora definida, não uma reversão genérica.
+Nenhuma migração remota é executada. Publicar o frontend não ativa a RPC num
+Supabase sem a migração 18. Backups/quotas foram adiados na #8; reversões
+administrativas/reabertura e desfazer revendas continuam fora do MVP.

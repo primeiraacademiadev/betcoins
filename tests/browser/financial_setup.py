@@ -69,8 +69,15 @@ def seed(scenario, mode, env):
         market['outcome'] = sql(f"select id from public.outcomes where market_id='{market['id']}' and competitor_id='{a}'", env)
         result[group] = market
         if scenario == 'settlement':
-            offer = as_user(a, f"select public.place_offer('{market['outcome']}','back',2,10);", env)
+            odds, stake = (1.20, 15) if group == 'tie' else (2, 10)
+            offer = as_user(a, f"select public.place_offer('{market['outcome']}','back',{odds},{stake});", env)
             as_user(b, f"select public.accept_offer('{offer}',10);", env)
+            if group == 'tie':
+                position = sql(f"select id from public.positions where market_id='{market['id']}' and side='back'", env)
+                listing = as_user(a, f"select public.list_position('{position}',7,10);", env)
+                as_user(c, f"select public.buy_position('{listing}');", env)
+                listing = as_user(c, f"select public.list_position('{position}',4,5);", env)
+                as_user(ACTORS[3], f"select public.buy_position('{listing}');", env)
             # Real short calendar, real server cutoff: no clock mocking, trigger
             # disabling, timestamp rewrites or fabricated frozen classifications.
             deadline = time.monotonic() + 20

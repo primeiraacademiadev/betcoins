@@ -60,3 +60,13 @@ recuperação do Supabase hospedado. Não implementa reversões financeiras e n�
 contorna empate/zero. Não cria compatibilidade legada e não executa migrações
 no Supabase remoto. `vite.financial.config.ts` é exclusivamente de testes; o build
 e a publicação normais continuam a usar `vite.config.ts`.
+
+
+## Devolução por empate — migração 18
+
+Os cenários de liquidação passam a cobrir a devolução ao mercado inteiro nas duas
+modalidades e a 1280/390 px: BACK 10/odd 1,20, LAY 2, remanescente não correspondido,
+revenda integral por 7 e revenda parcial posterior por 4. Verificam confirmação e
+cancelamento do diálogo, autorização, repetição idempotente, titulares finais,
+P&L/custos e histórico público. As revendas não são desfeitas. Antes da migração
+18, empate/zero permanece bloqueado; nenhum teste executa migrações remotas.

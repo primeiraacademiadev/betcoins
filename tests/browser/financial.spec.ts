@@ -103,7 +103,7 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   expect(await read(taker,'positions')).toHaveLength(1);await reconcile(maker);
  });
 
- test(`${mode}: validate frozen result, settle once, show realized P&L and block zero`,async({browser})=>{
+ test(`${mode}: regular settlement and whole-market tie refund preserve resale P&L`,async({browser})=>{
   const fixture=seed('settlement',mode);
   const admin=await actor(browser,fixture.actors[0],'Ana');
   const counterparty=await actor(browser,fixture.actors[1],'Bruno');
@@ -123,20 +123,39 @@ for(const mode of ['snapshot_value','snapshot_delta_previous'] as Mode[]){
   const replay=await rpc(admin,'settle_market',{p_market:fixture.ready.id,p_winner:winner});
   expect(replay.ok(),await replay.text()).toBe(true);expect((await read(admin,'ledger')).length).toBe(ledger);
   const tie=admin.page.locator('.panel').filter({has:admin.page.getByRole('heading',{name:fixture.tie.title,exact:true})}).last();
-  await tie.getByLabel('Nota da revisão').fill('Empate confirmado; manter o zero financeiramente bloqueado.');
+  await tie.getByLabel('Nota da revisão').fill('Empate confirmado; devolver colaterais aos titulares atuais.');
   await tie.getByRole('checkbox').check();
   await tie.getByRole('button',{name:'Validar classificação do mercado',exact:true}).click();
-  await expect(tie).toContainText('Empate relevante: liquidação bloqueada');
+  await expect(tie).toContainText('Empate relevante validado');
   await expect(tie.getByRole('button',{name:'Liquidar resultado validado',exact:true})).toBeDisabled();
   const prior=(await read(admin,'ledger')).length;
   expect((await rpc(admin,'settle_market',{p_market:fixture.tie.id,p_winner:fixture.tie.outcome})).ok()).toBe(false);
   expect((await read(admin,'ledger')).length).toBe(prior);
+  expect((await rpc(counterparty,'refund_tied_market',{p_market:fixture.tie.id})).ok()).toBe(false);
+  const refund=tie.getByRole('button',{name:'Devolver colateral por empate',exact:true});
+  await confirm(admin.page,refund,'Não desfaz revendas',false);
+  expect((await read(admin,'ledger')).length).toBe(prior);
+  await confirm(admin.page,refund,'BACK recebe a stake e LAY a responsabilidade');
+  await expect(admin.page.getByText('Colateral devolvido por empate aos titulares atuais.',{exact:true})).toBeVisible();
+  const afterRefund=(await read(admin,'ledger')).length;
+  expect((await rpc(admin,'refund_tied_market',{p_market:fixture.tie.id})).ok()).toBe(true);
+  expect((await read(admin,'ledger')).length).toBe(afterRefund);
   expect((await rpc(counterparty,'settle_market',{p_market:fixture.ready.id,p_winner:winner})).ok()).toBe(false);
-  const available=mode==='snapshot_value'?980:1000;
-  await wallet(admin,available,10);
+  const available=mode==='snapshot_value'?987:1007;
+  await wallet(admin,available,0);
   await expect(panel(admin.page,'Resultados económicos e revendas')).toContainText('Liquidação');
   await expect(panel(admin.page,'Resultados económicos e revendas')).toContainText(mode==='snapshot_value'?'-10 ฿':'10 ฿');
-  await refresh(counterparty);await wallet(counterparty,mode==='snapshot_value'?1000:980,10);
+  await refresh(counterparty);await wallet(counterparty,mode==='snapshot_value'?1010:990,0);
+  const buyer=await actor(browser,fixture.actors[2],'Carla');
+  const lastBuyer=await actor(browser,fixture.actors[3],'Duarte');
+  await wallet(buyer,1002,0);await wallet(lastBuyer,1001,0);
+  const refunds=await read(buyer,'position_settlements');
+  expect(refunds).toHaveLength(1);expect(Number(refunds[0].payoff)).toBe(5);
+  expect(Number(refunds[0].final_cost_basis)).toBe(3.5);expect(Number(refunds[0].realized_pnl)).toBe(1.5);
+  const sales=await read(buyer,'position_sales');
+  expect(sales.some((x:{seller_id:string;realized_pnl:number})=>x.seller_id===buyer.id&&Number(x.realized_pnl)===0.5)).toBe(true);
+  await market(buyer,fixture.tie);
+  await expect(buyer.page.getByText('Empate: colateral devolvido aos titulares atuais, sem desfazer revendas.',{exact:false})).toBeVisible();
   await reconcile(admin);await mobileFits(admin.page);
  });
 }

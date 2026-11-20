@@ -148,7 +148,12 @@ jobs:
       - name: Overlapping weekly credits and ledger reconciliation
         run: python3 tests/db/operations_concurrency.py
       - name: Restore populated database and verify data, permissions and current-model acceptance
-        run: python3 tests/db/recovery.py
+        run: |
+          for db in betcoins betcoins_baseline betcoins_upgrade; do
+            PGDATABASE=$db psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611200001_tie_refunds.sql
+            PGDATABASE=$db python3 tests/db/tie_refunds_concurrency.py
+          done
+          python3 tests/db/recovery.py
   browser:
     runs-on: ubuntu-24.04
     steps:

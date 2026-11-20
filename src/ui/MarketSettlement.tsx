@@ -12,6 +12,8 @@ export function resolutionMessage(status:string):string {
  const messages:Record<string,string>={
   ready:'Classificação validada. O resultado é determinado pelos dados congelados.',
   settled:'Mercado liquidado.',
+  ready_refund:'Empate relevante validado: devolver o colateral de todo o mercado aos titulares atuais, sem desfazer revendas.',
+  refunded:'Empate: colateral devolvido aos titulares atuais. As revendas anteriores mantêm-se.',
   unlinked:'Mercado sem período válido. Usa os mercados das bets recorrentes.',
   awaiting_validation:'Aguarda captura e validação final da classificação.',
   waiting_current_snapshot:'Aguarda o snapshot de fecho deste período.',
@@ -19,7 +21,7 @@ export function resolutionMessage(status:string):string {
   incomplete:'Existem concorrentes sem dados completos. Não é possível apurar o resultado.',
   universe_changed:'Os participantes do mercado diferem da classificação. É necessária revisão da elegibilidade.',
   period_mismatch:'O fecho do mercado não corresponde ao snapshot validado. É necessária revisão.',
-  tie_unsupported:'Empate relevante: liquidação bloqueada. A regra de zero ainda não tem suporte financeiro.',
+  tie_unsupported:'Empate/zero relevante: liquidação bloqueada. A devolução ainda não está disponível neste mercado.',
  };
  return messages[status]??'Apuramento indisponível. Atualiza os dados antes de tentar novamente.';
 }
@@ -36,7 +38,7 @@ export function ClassificationDetails({review,category}:{review:MarketClassifica
   {review.rows.map(row=><div className={'rank-row'+(highlighted.has(row.competitor_id)?' target-row':'')} key={row.competitor_id}><span>{row.place??'—'} · {row.nickname}{highlighted.has(row.competitor_id)&&<small className="target-label">Posição desta aposta</small>}<small className="movement-date">Fecho: {row.end_ytd===null?'sem declaração':row.end_ytd+'%'}{review.mode==='snapshot_delta_previous'&&' · Referência: '+(row.previous_ytd===null?'sem declaração':row.previous_ytd+'%')}</small><ScoreAuditDetails row={row}/><EntryReferenceDetails row={row}/></span><strong>{row.status==='complete'&&row.value!==null?Number(row.value).toFixed(4)+' '+review.unit:'Sem dados para apuramento'}</strong></div>)}
   {review.validation&&<p className="footnote">Validação em {new Date(review.validation.validated_at).toLocaleString('pt-PT')} · Nota: {review.validation.note}</p>}</>;
 }
-export function MarketSettlement({market,outcomeLabels,busy,onSettle,onValidate}:{market:Market;outcomeLabels:Record<string,string>;busy:boolean;onSettle:(winner:string)=>void;onValidate?:(note:string)=>Promise<void>}){
+export function MarketSettlement({market,outcomeLabels,busy,onSettle,onValidate,onRefund}:{market:Market;outcomeLabels:Record<string,string>;busy:boolean;onSettle:(winner:string)=>void;onValidate?:(note:string)=>Promise<void>;onRefund?:()=>void}){
  const [result,setResult]=useState<Resolution|null>(null),[revision,setRevision]=useState(0),[failed,setFailed]=useState(false);
  const [review,setReview]=useState<MarketClassification|null>(null),[note,setNote]=useState(''),[confirmed,setConfirmed]=useState(false);
  useEffect(()=>{
@@ -58,5 +60,8 @@ export function MarketSettlement({market,outcomeLabels,busy,onSettle,onValidate}
   <button className="button" disabled={busy||result?.status!=='ready'||!winner||!outcomeLabels[winner]||Date.parse(market.closes_at)>Date.now()} onClick={()=>{
    if(winner&&window.confirm('Liquidar definitivamente com o resultado validado: '+outcomeLabels[winner]+'?'))onSettle(winner);
   }}>Liquidar resultado validado</button>
+  {result?.status==='ready_refund'&&onRefund&&<button className="button" disabled={busy||Date.parse(market.closes_at)>Date.now()} onClick={()=>{
+   if(window.confirm('Devolver integralmente o colateral de todo o mercado por empate? BACK recebe a stake e LAY a responsabilidade, nos titulares atuais. Não desfaz revendas e não devolve os preços de compra.'))onRefund();
+  }}>Devolver colateral por empate</button>}
  </div>;
 }
